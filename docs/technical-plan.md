@@ -209,7 +209,7 @@ angle = -90° + hitRatio * 约 52°
 - `HudController.renderLevelSelect()` 根据关卡摘要动态生成按钮式关卡卡片。
 - `HudController.showLevelTransition()` 和 `HudController.showResult()` 只渲染内容，实际切屏由 `Game.setPhase()` 统一触发，确保 phase、覆盖层和焦点状态一致。
 - PC 端 HUD 布局：分数、关卡、模式、计时、机会和暂停按钮以底部横向面板形式居中显示（`bottom: 16px`, `left: 50%`, `max-width: 960px`），道具栏独立放在分数菜单上方（`bottom: 82px`），形成底部双层布局，避免两个菜单重叠；两层均参考移动端胶囊风格；砖块布局使用全画布宽度，通过 `desktopBottomDockHeight: 144` 和 `desktopControlDockHeight: 144` 预留底部空间，确保挡板和弹球不会进入 HUD 区域。
-- 移动端 HUD 布局：底部横向面板（`bottom: calc(max(8px, env(safe-area-inset-bottom)) + 58px)`），道具栏紧贴底部，两者通过 `mobileBottomDockHeight: 184` 和 `mobileControlDockHeight: 228` 预留空间，避免遮挡挡板和弹球。
+- 移动端 HUD 布局：道具栏贴近安全区底部（`bottom: max(8px, env(safe-area-inset-bottom))`），分数菜单固定在道具栏上方（`bottom: calc(max(8px, env(safe-area-inset-bottom)) + 58px)`），触控提示进一步上移，形成移动端底部双层兼容布局；通过 `mobileBottomDockHeight: 184` 和 `mobileControlDockHeight: 228` 预留空间，避免遮挡挡板、弹球和触控操作区域。
 - 开始、过渡、暂停和结算覆盖层使用 `dialog` 语义、`aria-modal` 和标题关联，隐藏时同步 `aria-hidden` 与 `inert`，避免不可见控件进入 Tab 顺序。
 - 屏幕切换后焦点自动落到当前覆盖层主按钮；回到游戏时焦点返回 Canvas，保证键盘用户能继续用空格、方向键和快捷键操作。
 - 按钮和关卡卡片提供 `:focus-visible` 高对比焦点样式。
