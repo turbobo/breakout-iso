@@ -211,15 +211,17 @@ export function getLevelSummaries(): LevelSummary[] {
 export function createLevelBricks(levelIndex: number, boardWidth: number): Brick[] {
   const definition = getLevelDefinition(levelIndex)
   const columns = Math.max(...definition.pattern.map((row) => row.length))
-  const brickGap = clampLayoutValue(boardWidth * 0.009, 4, 6)
-  const horizontalMargin = clampLayoutValue(boardWidth * 0.04, 12, 44)
-  const availableGridWidth = boardWidth - horizontalMargin * 2
-  const maxGridWidth = boardWidth >= 900 ? 840 : availableGridWidth
+  const desktopHudSafeInset = boardWidth > 720 ? 184 : 0
+  const playfieldWidth = boardWidth - desktopHudSafeInset
+  const brickGap = clampLayoutValue(playfieldWidth * 0.009, 4, 6)
+  const horizontalMargin = clampLayoutValue(playfieldWidth * 0.04, 12, 44)
+  const availableGridWidth = playfieldWidth - horizontalMargin * 2
+  const maxGridWidth = playfieldWidth >= 900 ? 840 : availableGridWidth
   const gridWidth = Math.max(280, Math.min(availableGridWidth, maxGridWidth))
   const brickWidth = (gridWidth - brickGap * (columns - 1)) / columns
-  const brickHeight = clampLayoutValue(boardWidth * 0.032, 14, 20)
-  const topOffset = boardWidth < 720 ? 92 : 106
-  const startX = (boardWidth - gridWidth) / 2
+  const brickHeight = clampLayoutValue(playfieldWidth * 0.032, 14, 20)
+  const topOffset = boardWidth <= 720 ? 92 : 72
+  const startX = (playfieldWidth - gridWidth) / 2
   const bricks: Brick[] = []
 
   definition.pattern.forEach((rowPattern, rowIndex) => {

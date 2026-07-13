@@ -64,22 +64,23 @@ button {
 
 .top-hud {
   position: absolute;
-  top: 16px;
-  left: 50%;
+  top: 50%;
+  right: 18px;
   z-index: 3;
   display: grid;
-  grid-template-columns: repeat(6, minmax(76px, auto)) auto;
-  gap: 10px;
-  align-items: center;
-  width: min(980px, calc(100vw - 24px));
+  grid-template-columns: 1fr;
+  gap: 8px;
+  align-items: stretch;
+  width: 148px;
   padding: 10px;
-  border-radius: 999px;
-  transform: translateX(-50%);
+  border-radius: 28px;
+  transform: translateY(-50%);
 }
 
 .hud-item {
-  padding: 8px 12px;
-  border-radius: 999px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -113,6 +114,7 @@ button {
 }
 
 .icon-button {
+  width: 100%;
   padding: 0 17px;
   border: 1px solid rgba(124, 219, 255, 0.36);
   background: rgba(124, 219, 255, 0.13);
@@ -188,7 +190,7 @@ button {
 
 .toast {
   position: absolute;
-  top: 112px;
+  top: 18px;
   left: 50%;
   z-index: 4;
   padding: 11px 16px;
@@ -416,12 +418,15 @@ h2 {
 @media (max-width: 720px) {
   .top-hud {
     top: auto;
+    right: auto;
     bottom: calc(max(8px, env(safe-area-inset-bottom)) + 58px);
+    left: 50%;
     grid-template-columns: repeat(3, minmax(0, 1fr)) 44px;
     gap: 5px;
     width: calc(100vw - 16px);
     padding: 7px;
     border-radius: 22px;
+    transform: translateX(-50%);
   }
 
   .icon-button {
