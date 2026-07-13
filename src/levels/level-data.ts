@@ -211,8 +211,7 @@ export function getLevelSummaries(): LevelSummary[] {
 export function createLevelBricks(levelIndex: number, boardWidth: number): Brick[] {
   const definition = getLevelDefinition(levelIndex)
   const columns = Math.max(...definition.pattern.map((row) => row.length))
-  const desktopHudSafeInset = boardWidth > 720 ? 184 : 0
-  const playfieldWidth = boardWidth - desktopHudSafeInset
+  const playfieldWidth = boardWidth
   const brickGap = clampLayoutValue(playfieldWidth * 0.009, 4, 6)
   const horizontalMargin = clampLayoutValue(playfieldWidth * 0.04, 12, 44)
   const availableGridWidth = playfieldWidth - horizontalMargin * 2
