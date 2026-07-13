@@ -44,28 +44,28 @@ const brickColors: Record<string, string> = {
 
 const levelDefinitions: LevelDefinition[] = [
   {
-    name: 'Warm Up',
+    name: '热身练习',
     mode: 'classic',
     difficulty: 1,
     description: '基础三排砖块，适合熟悉挡板反弹手感。',
     pattern: ['RRRRRRRRRR', 'YYYYYYYYYY', 'GGGGGGGGGG'],
   },
   {
-    name: 'First Armor',
+    name: '初遇护甲',
     mode: 'classic',
     difficulty: 2,
     description: '第一次出现加固砖块，需要连续击中。',
     pattern: ['RRRRRRRRRR', 'YHYYYYYYHY', 'GGGGGGGGGG', 'BBBBBBBBBB'],
   },
   {
-    name: 'Steel Gate',
+    name: '钢铁之门',
     mode: 'classic',
     difficulty: 2,
     description: '钢铁砖块形成门洞，训练斜线反弹。',
     pattern: ['RRRRRRRRRR', 'YSSYYYYSSY', 'GGGGHHGGGG', 'BBBBBBBBBB'],
   },
   {
-    name: 'Chain Blast',
+    name: '连锁爆破',
     mode: 'timed',
     difficulty: 3,
     description: '限时爆破关，利用爆炸砖块快速清场。',
@@ -74,7 +74,7 @@ const levelDefinitions: LevelDefinition[] = [
     pattern: ['RRXRRRRXRR', 'YHYYYYYYHY', 'GGGGXXGGGG', 'BBBBBBBBBB'],
   },
   {
-    name: 'Neon Steps',
+    name: '霓虹阶梯',
     mode: 'classic',
     difficulty: 3,
     description: '阶梯空洞布局，考验控球角度。',
@@ -82,14 +82,14 @@ const levelDefinitions: LevelDefinition[] = [
     pattern: ['R........R', 'RR......RR', 'HHH....HHH', 'BBBB..BBBB', 'PPPPPPPPPP'],
   },
   {
-    name: 'Metal Garden',
+    name: '金属花园',
     mode: 'classic',
     difficulty: 4,
     description: '钢铁和爆炸混合出现，路线更复杂。',
     pattern: ['GGGGGGGGGG', 'GSSGHHGSSG', 'GXGGGGGGXG', 'BBBBBBBBBB', 'PPPPPPPPPP'],
   },
   {
-    name: 'Cross Fire',
+    name: '交叉火力',
     mode: 'timed',
     difficulty: 4,
     description: '限时十字火力关，爆炸砖块集中在关键通道。',
@@ -99,7 +99,7 @@ const levelDefinitions: LevelDefinition[] = [
     pattern: ['RRRXXRRRXX', 'YHYYYYYYHY', '..SSHHSS..', 'BBBBXXBBBB', 'PPPPPPPPPP'],
   },
   {
-    name: 'Tight Lane',
+    name: '狭窄通道',
     mode: 'classic',
     difficulty: 5,
     description: '钢铁墙压缩反弹空间，需要稳定控球。',
@@ -107,14 +107,14 @@ const levelDefinitions: LevelDefinition[] = [
     pattern: ['SSSRRRRSSS', 'RHHHXXHHHR', 'YYYYSSYYYY', 'GGGGGGGGGG', 'BBBBBBBBBB'],
   },
   {
-    name: 'Neon Heart',
+    name: '霓虹之心',
     mode: 'classic',
     difficulty: 5,
     description: '图案关卡，空位更多但爆炸点更隐蔽。',
     pattern: ['.RR..RR...', 'RHHRRHHR..', 'RXXHHXXR..', '.PPHHPP...', '..BBBB....'],
   },
   {
-    name: 'Final Grid',
+    name: '终局网格',
     mode: 'timed',
     difficulty: 6,
     description: '限时网格终测，需要快速打开钢铁间隙。',
@@ -124,10 +124,10 @@ const levelDefinitions: LevelDefinition[] = [
     pattern: ['RXHSSSHXR', 'YHYXXYHY.', 'GGSSHHGGG', 'BBBBXXBBB', 'PPPPPPPPP'],
   },
   {
-    name: 'Boss Prism',
+    name: '棱镜首领',
     mode: 'boss',
     difficulty: 6,
-    description: '第一场 Boss 战，Boss 会周期性释放加速脉冲。',
+    description: '第一场首领战，首领会周期性释放加速脉冲。',
     ballSpeedMultiplier: 1.08,
     powerUpDropRate: 0.3,
     bossSkillIntervalSeconds: 9,
@@ -135,7 +135,7 @@ const levelDefinitions: LevelDefinition[] = [
     pattern: ['....OO....', '..OHHHHO..', '.OHSSSHO.', 'OOHXXHOO.', '.OHSSSHO.', '..OHHHHO..'],
   },
   {
-    name: 'Minute Rush',
+    name: '一分钟冲刺',
     mode: 'timed',
     difficulty: 7,
     description: '一分钟冲刺关，道具掉落更高但球速更快。',
@@ -145,7 +145,7 @@ const levelDefinitions: LevelDefinition[] = [
     pattern: ['RXRXRXRXRX', 'YHYHYHYHYH', 'GXGXGXGXGX', 'BHBHBHBHBH', 'PPPPPPPPPP'],
   },
   {
-    name: 'Shield Maze',
+    name: '护盾迷宫',
     mode: 'classic',
     difficulty: 7,
     description: '钢铁迷宫关，必须从侧边找入口。',
@@ -153,7 +153,7 @@ const levelDefinitions: LevelDefinition[] = [
     pattern: ['SSSS..SSSS', 'RHHHXXHHHR', 'R.SS..SS.R', 'YYYYHHYYYY', 'BBBBXXBBBB', 'PPPPPPPPPP'],
   },
   {
-    name: 'Blast Flower',
+    name: '爆破花瓣',
     mode: 'classic',
     difficulty: 8,
     description: '爆炸砖块像花瓣一样连锁展开。',
@@ -162,20 +162,20 @@ const levelDefinitions: LevelDefinition[] = [
     pattern: ['..XRRX....', '.XHYYHX...', 'XHSSSSHX..', '.XHGGHX...', '..XBBX....', 'PPPPPPPPPP'],
   },
   {
-    name: 'Overclock',
+    name: '超频挑战',
     mode: 'timed',
     difficulty: 8,
-    description: '高速限时关，保留生命比清场更难。',
+    description: '高速限时关，保留机会比清场更难。',
     timeLimitSeconds: 80,
     ballSpeedMultiplier: 1.22,
     powerUpDropRate: 0.3,
     pattern: ['RRHHHHHHRR', 'YXXSSXXYY', 'GGHHHHHHGG', 'BXXSSXXBB', 'PPHHHHHHPP'],
   },
   {
-    name: 'Boss Eclipse',
+    name: '日蚀首领',
     mode: 'boss',
     difficulty: 9,
-    description: '终局 Boss 关，Boss 脉冲更频繁且血量更厚。',
+    description: '终局首领关，首领脉冲更频繁且血量更厚。',
     ballSpeedMultiplier: 1.18,
     powerUpDropRate: 0.32,
     bossSkillIntervalSeconds: 7,
@@ -193,7 +193,7 @@ export function getLevelDefinition(levelIndex: number): LevelDefinition {
 }
 
 export function getLevelName(levelIndex: number): string {
-  return getLevelDefinition(levelIndex)?.name ?? 'Unknown Level'
+  return getLevelDefinition(levelIndex)?.name ?? '未知关卡'
 }
 
 export function getLevelSummaries(): LevelSummary[] {

@@ -171,7 +171,7 @@ export class Renderer {
         continue
       }
 
-      const label = powerUp.kind === 'multiball' ? 'M' : powerUp.kind === 'wide' ? 'W' : powerUp.kind === 'fireball' ? 'F' : 'S'
+      const label = powerUp.kind === 'multiball' ? '多' : powerUp.kind === 'wide' ? '宽' : powerUp.kind === 'fireball' ? '火' : '盾'
       const color = powerUp.kind === 'fireball' ? '#FF6B35' : powerUp.kind === 'shield' ? '#48BB78' : '#7CDBFF'
 
       this.context.save()

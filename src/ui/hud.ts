@@ -80,15 +80,15 @@ export class HudController {
   ): void {
     const levelButtons = levels.map((level) => {
       const levelButton = document.createElement('button')
-      const timerText = level.timeLimitSeconds ? `${level.timeLimitSeconds}s` : level.mode === 'boss' ? 'Pulse' : 'No timer'
-      const chanceText = level.chanceCount === 1 ? '1 Chance' : `${level.chanceCount} Chances`
+      const timerText = level.timeLimitSeconds ? `${level.timeLimitSeconds} 秒` : level.mode === 'boss' ? '脉冲' : '不限时'
+      const chanceText = level.chanceCount === 1 ? '1 次机会' : `${level.chanceCount} 次机会`
 
       levelButton.type = 'button'
       levelButton.className = 'level-card'
       levelButton.classList.toggle('is-selected', level.index === selectedLevelIndex)
       levelButton.dataset.levelIndex = String(level.index)
       levelButton.innerHTML = `
-        <span class="level-card-meta">${formatModeLabel(level.mode)} · D${level.difficulty} · ${timerText} · ${chanceText}</span>
+        <span class="level-card-meta">${formatModeLabel(level.mode)} · 难度 ${level.difficulty} · ${timerText} · ${chanceText}</span>
         <strong>${level.index + 1}. ${level.name}</strong>
         <small>${level.description}</small>
       `
@@ -118,16 +118,16 @@ export class HudController {
 
   public showLevelTransition(state: LevelTransitionState): void {
     window.clearTimeout(this.toastTimer)
-    this.transitionEyebrow.textContent = `Level ${state.completedLevel} Clear`
-    this.transitionTitle.textContent = `下一关 · ${state.nextName}`
-    this.transitionSummary.textContent = `${formatModeLabel(state.nextMode)} 模式 · ${state.nextDescription}`
+    this.transitionEyebrow.textContent = `第 ${state.completedLevel} 关完成`
+    this.transitionTitle.textContent = `确认进入第 ${state.nextLevel} 关？`
+    this.transitionSummary.textContent = `下一关：${state.nextName} · ${formatModeLabel(state.nextMode)}模式 · ${state.nextDescription}`
     this.transitionStats.textContent = `奖励 +${state.bonusScore} · 第 ${state.nextLevel} 关 · ${state.nextChanceCount} 次机会`
     this.showScreen('transition')
   }
 
   public showResult(state: ResultState): void {
     window.clearTimeout(this.toastTimer)
-    this.resultLabel.textContent = state.won ? 'Victory' : 'Game Over'
+    this.resultLabel.textContent = state.won ? '胜利' : '游戏结束'
     this.resultTitle.textContent = state.won ? '通关成功' : '再来一局'
     this.resultSummary.textContent = `得分 ${state.score} · 最高分 ${state.bestScore} · 到达第 ${state.level} 关 · ${state.mode} · 最大连击 x${Math.max(1, state.combo)}`
     this.showScreen('result')
@@ -146,12 +146,12 @@ export class HudController {
 
 function formatModeLabel(mode: string): string {
   if (mode === 'timed') {
-    return 'Timed'
+    return '限时'
   }
 
   if (mode === 'boss') {
-    return 'Boss'
+    return '首领'
   }
 
-  return 'Classic'
+  return '常规'
 }

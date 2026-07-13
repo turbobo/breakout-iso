@@ -311,7 +311,7 @@ export class Game {
     this.resetRun()
     this.phase = 'playing'
     this.hud.showScreen('none')
-    this.hud.showToast('New Run')
+    this.hud.showToast('新的挑战开始')
   }
 
   private returnToMenu(): void {
@@ -442,7 +442,7 @@ export class Game {
     this.audio.play('explosion', 0.34)
     this.shake = Math.max(this.shake, 7)
     this.particles.burst(brick.center, brick.color, 12)
-    this.hud.showToast(`Boss HP ${brick.health}/${brick.maxHealth}`)
+    this.hud.showToast(`首领血量 ${brick.health}/${brick.maxHealth}`)
   }
 
   private destroyBrick(brick: Brick, ball: Ball): void {
@@ -488,7 +488,7 @@ export class Game {
   private increaseBallSpeed(ball: Ball): void {
     const nextSpeed = Math.min(maxBallSpeed, getSpeed(ball.velocity) * 1.03)
     ball.velocity = scaleToLength(ball.velocity, nextSpeed)
-    this.hud.showToast('Speed Up')
+    this.hud.showToast('速度提升')
   }
 
   private updatePowerUps(deltaSeconds: number): void {
@@ -534,7 +534,7 @@ export class Game {
     }
 
     this.audio.play('powerup')
-    this.hud.showToast(kind.toUpperCase())
+    this.hud.showToast(getPowerUpLabel(kind))
   }
 
   private applyMultiBall(): void {
@@ -575,7 +575,7 @@ export class Game {
         ball.position.y = playBottomY - 22
         ball.velocity.y = -Math.abs(ball.velocity.y)
         this.audio.play('paddle')
-        this.hud.showToast('Shield Save')
+        this.hud.showToast('护盾抵挡')
         continue
       }
 
@@ -601,7 +601,7 @@ export class Game {
     this.spawnPrimaryBall()
     this.phase = 'paused'
     this.hud.showScreen('pause')
-    this.hud.showToast('Chance Lost')
+    this.hud.showToast('失去一次机会')
   }
 
   private checkLevelComplete(): void {
@@ -713,7 +713,7 @@ export class Game {
       this.levelTimeRemainingSeconds = Math.max(0, this.levelTimeRemainingSeconds - deltaSeconds)
 
       if (this.levelTimeRemainingSeconds <= 0) {
-        this.hud.showToast('Time Up')
+        this.hud.showToast('时间到')
         this.finish(false)
         return
       }
@@ -742,7 +742,7 @@ export class Game {
     })
     this.shake = Math.max(this.shake, 10)
     this.audio.play('explosion', 0.72)
-    this.hud.showToast('Boss Pulse')
+    this.hud.showToast('首领脉冲')
   }
 
   private hasActiveBossBrick(): boolean {
@@ -757,23 +757,23 @@ export class Game {
     const mode = getLevelDefinition(levelIndex).mode
 
     if (mode === 'timed') {
-      return 'Timed'
+      return '限时'
     }
 
     if (mode === 'boss') {
-      return 'Boss'
+      return '首领'
     }
 
-    return 'Classic'
+    return '常规'
   }
 
   private getTimerText(): string {
     if (this.levelTimeRemainingSeconds !== null) {
-      return `${Math.ceil(this.levelTimeRemainingSeconds)}s`
+      return `${Math.ceil(this.levelTimeRemainingSeconds)} 秒`
     }
 
     if (getLevelDefinition(this.levelIndex).mode === 'boss') {
-      return `${Math.ceil(this.bossSkillCooldownSeconds)}s`
+      return `${Math.ceil(this.bossSkillCooldownSeconds)} 秒`
     }
 
     return '∞'
@@ -800,4 +800,20 @@ export class Game {
 
     return activePowerUps
   }
+}
+
+function getPowerUpLabel(kind: PowerUpKind): string {
+  if (kind === 'multiball') {
+    return '多球道具'
+  }
+
+  if (kind === 'wide') {
+    return '挡板加宽'
+  }
+
+  if (kind === 'fireball') {
+    return '火球道具'
+  }
+
+  return '护盾道具'
 }
