@@ -12,9 +12,14 @@ export interface Particle {
 
 export class ParticleSystem {
   private readonly particles: Particle[] = []
+  private readonly maxParticles = 500
 
   public burst(position: Vector2, color: string, amount: number): void {
-    for (let particleIndex = 0; particleIndex < amount; particleIndex += 1) {
+    const remainingCapacity = this.maxParticles - this.particles.length
+    if (remainingCapacity <= 0) return
+
+    const actualAmount = Math.min(amount, remainingCapacity)
+    for (let particleIndex = 0; particleIndex < actualAmount; particleIndex += 1) {
       this.particles.push({
         position: { ...position },
         velocity: {

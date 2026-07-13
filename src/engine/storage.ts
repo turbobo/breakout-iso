@@ -1,13 +1,17 @@
 const highScoreKey = 'neon-breakout-best-score'
+let cachedBestScore: number | null = null
 
 export function readBestScore(): number {
+  if (cachedBestScore !== null) return cachedBestScore
   const storedScore = window.localStorage.getItem(highScoreKey)
   const parsedScore = Number(storedScore)
-
-  return Number.isFinite(parsedScore) ? parsedScore : 0
+  cachedBestScore = Number.isFinite(parsedScore) ? parsedScore : 0
+  return cachedBestScore
 }
 
 export function saveBestScore(score: number): void {
-  const bestScore = Math.max(readBestScore(), score)
-  window.localStorage.setItem(highScoreKey, String(bestScore))
+  const currentBest = readBestScore()
+  if (score <= currentBest) return
+  cachedBestScore = score
+  window.localStorage.setItem(highScoreKey, String(score))
 }

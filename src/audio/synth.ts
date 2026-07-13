@@ -19,9 +19,15 @@ declare global {
 export class SynthAudio {
   private audioContext: AudioContext | null = null
   private muted = false
-  private hasLoggedAudioError = false
+  private isInitialized = false
+  private lastErrorTime = 0
+  private readonly errorCooldownMs = 5000
 
   public async resume(): Promise<void> {
+    if (this.isInitialized && this.audioContext?.state === 'running') {
+      return
+    }
+
     try {
       if (!this.audioContext) {
         const AudioContextConstructor = window.AudioContext || window.webkitAudioContext
@@ -36,6 +42,8 @@ export class SynthAudio {
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume()
       }
+
+      this.isInitialized = true
     } catch (error) {
       this.handleAudioError(error)
       throw error
@@ -107,11 +115,12 @@ export class SynthAudio {
   }
 
   private handleAudioError(error: unknown): void {
-    if (this.hasLoggedAudioError) {
+    const now = Date.now()
+    if (now - this.lastErrorTime < this.errorCooldownMs) {
       return
     }
 
-    this.hasLoggedAudioError = true
-    console.warn('音频系统暂时不可用，已跳过本次播放。', error)
+    this.lastErrorTime = now
+    console.warn('音频系统暂时不可用，将在 5 秒后重试。', error)
   }
 }

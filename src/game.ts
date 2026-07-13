@@ -149,6 +149,7 @@ export class Game {
 
   private tick(currentTime: number): void {
     if (this.disposed) {
+      this.animationFrameId = null
       return
     }
 
@@ -160,7 +161,12 @@ export class Game {
     }
 
     this.draw()
-    this.animationFrameId = window.requestAnimationFrame((time) => this.tick(time))
+
+    if (!this.disposed) {
+      this.animationFrameId = window.requestAnimationFrame((time) => this.tick(time))
+    } else {
+      this.animationFrameId = null
+    }
   }
 
   private update(deltaSeconds: number): void {
@@ -634,6 +640,9 @@ export class Game {
     this.audio.play(brick.kind === 'explosive' ? 'explosion' : 'brick', 1 + Math.min(1, this.combo * 0.06))
     this.shake = Math.max(this.shake, brick.kind === 'explosive' ? 12 : 4)
 
+    brick.alive = false
+    this.removeFromCollisionBuckets(brick)
+
     if (brick.kind === 'explosive') {
       this.explodeAround(brick)
     }
@@ -644,6 +653,28 @@ export class Game {
 
     if (this.destroyedBrickCount % gameConfig.speedIncreaseEveryDestroyedBricks === 0) {
       this.increaseBallSpeed(ball)
+    }
+  }
+
+  private removeFromCollisionBuckets(brick: Brick): void {
+    const rect = brick.rect
+    const minColumn = Math.max(0, Math.floor(rect.x / gameConfig.brickCollisionCellSize))
+    const maxColumn = Math.min(
+      this.brickCollisionBucketColumnCount - 1,
+      Math.floor((rect.x + rect.width) / gameConfig.brickCollisionCellSize),
+    )
+    const minRow = Math.max(0, Math.floor(rect.y / gameConfig.brickCollisionCellSize))
+    const maxRow = Math.max(minRow, Math.floor((rect.y + rect.height) / gameConfig.brickCollisionCellSize))
+
+    for (let rowIndex = minRow; rowIndex <= maxRow; rowIndex += 1) {
+      for (let columnIndex = minColumn; columnIndex <= maxColumn; columnIndex += 1) {
+        const bucketKey = this.getBrickCollisionBucketKey(columnIndex, rowIndex)
+        const bucket = this.brickCollisionBuckets.get(bucketKey)
+        if (bucket) {
+          const index = bucket.indexOf(brick)
+          if (index !== -1) bucket.splice(index, 1)
+        }
+      }
     }
   }
 

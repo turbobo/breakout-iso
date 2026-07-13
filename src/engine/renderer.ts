@@ -323,7 +323,7 @@ export class Renderer {
   }
 
   private getBrickGradient(color: string, isSteel: boolean, topY: number, height: number): CanvasGradient {
-    const gradientKey = `${color}:${isSteel ? 'steel' : 'normal'}:${topY.toFixed(2)}:${height.toFixed(2)}`
+    const gradientKey = `${color}:${isSteel ? 'steel' : 'normal'}:${Math.round(topY)}:${Math.round(height)}`
     const cachedGradient = this.brickGradientCache.get(gradientKey)
 
     if (cachedGradient) {
