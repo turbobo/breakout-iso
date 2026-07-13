@@ -15,6 +15,7 @@ import { Renderer } from './engine/renderer'
 import { readBestScore, saveBestScore } from './engine/storage'
 import {
   createLevelBricks,
+  getLevelChanceCount,
   getLevelCount,
   getLevelDefinition,
   getLevelName,
@@ -25,7 +26,6 @@ import { HudController } from './ui/hud'
 
 type GamePhase = 'start' | 'playing' | 'transition' | 'paused' | 'result'
 
-const initialLives = 3
 const initialBallSpeed = 430
 const maxBallSpeed = 760
 const speedIncreaseEveryDestroyedBricks = 8
@@ -50,7 +50,7 @@ export class Game {
   private lastFrameTime = 0
   private score = 0
   private bestScore = readBestScore()
-  private lives = initialLives
+  private lives = getLevelChanceCount(0)
   private levelIndex = 0
   private combo = 0
   private maxCombo = 0
@@ -326,7 +326,6 @@ export class Game {
 
   private resetRun(): void {
     this.score = 0
-    this.lives = initialLives
     this.combo = 0
     this.maxCombo = 0
     this.destroyedBrickCount = 0
@@ -339,6 +338,7 @@ export class Game {
 
     this.bricks = createLevelBricks(levelIndex, this.boardWidth)
     this.powerUps = []
+    this.lives = getLevelChanceCount(levelIndex)
     this.levelTimeRemainingSeconds = levelDefinition.timeLimitSeconds ?? null
     this.bossSkillCooldownSeconds = levelDefinition.bossSkillIntervalSeconds ?? 0
     this.paddle = new Paddle({ x: this.boardWidth / 2, y: this.getPaddleY() })
@@ -601,7 +601,7 @@ export class Game {
     this.spawnPrimaryBall()
     this.phase = 'paused'
     this.hud.showScreen('pause')
-    this.hud.showToast('Life Lost')
+    this.hud.showToast('Chance Lost')
   }
 
   private checkLevelComplete(): void {
@@ -641,6 +641,7 @@ export class Game {
       nextName: getLevelName(nextLevelIndex),
       nextMode: nextLevelDefinition.mode,
       nextDescription: nextLevelDefinition.description,
+      nextChanceCount: getLevelChanceCount(nextLevelIndex),
       bonusScore,
     })
   }

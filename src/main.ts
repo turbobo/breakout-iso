@@ -33,7 +33,7 @@ app.innerHTML = `
         <strong data-hud="timer">∞</strong>
       </div>
       <div class="hud-item">
-        <span>Lives</span>
+        <span>Chance</span>
         <strong data-hud="lives">3</strong>
       </div>
       <button class="icon-button" data-action="pause" type="button">Pause</button>

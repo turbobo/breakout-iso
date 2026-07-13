@@ -81,13 +81,14 @@ export class HudController {
     const levelButtons = levels.map((level) => {
       const levelButton = document.createElement('button')
       const timerText = level.timeLimitSeconds ? `${level.timeLimitSeconds}s` : level.mode === 'boss' ? 'Pulse' : 'No timer'
+      const chanceText = level.chanceCount === 1 ? '1 Chance' : `${level.chanceCount} Chances`
 
       levelButton.type = 'button'
       levelButton.className = 'level-card'
       levelButton.classList.toggle('is-selected', level.index === selectedLevelIndex)
       levelButton.dataset.levelIndex = String(level.index)
       levelButton.innerHTML = `
-        <span class="level-card-meta">${formatModeLabel(level.mode)} · D${level.difficulty} · ${timerText}</span>
+        <span class="level-card-meta">${formatModeLabel(level.mode)} · D${level.difficulty} · ${timerText} · ${chanceText}</span>
         <strong>${level.index + 1}. ${level.name}</strong>
         <small>${level.description}</small>
       `
@@ -120,7 +121,7 @@ export class HudController {
     this.transitionEyebrow.textContent = `Level ${state.completedLevel} Clear`
     this.transitionTitle.textContent = `下一关 · ${state.nextName}`
     this.transitionSummary.textContent = `${formatModeLabel(state.nextMode)} 模式 · ${state.nextDescription}`
-    this.transitionStats.textContent = `奖励 +${state.bonusScore} · 即将进入第 ${state.nextLevel} 关`
+    this.transitionStats.textContent = `奖励 +${state.bonusScore} · 第 ${state.nextLevel} 关 · ${state.nextChanceCount} 次机会`
     this.showScreen('transition')
   }
 
