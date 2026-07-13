@@ -13,6 +13,7 @@ export interface RenderFrame {
   score: number
   combo: number
   shieldActive: boolean
+  shieldY: number
   shake: number
 }
 
@@ -42,7 +43,7 @@ export class Renderer {
     this.drawBricks(frame.bricks)
     this.drawPowerUps(frame.powerUps)
     this.drawPaddle(frame.paddle)
-    this.drawShield(width, height, frame.shieldActive)
+    this.drawShield(width, frame.shieldY, frame.shieldActive)
     this.drawBallTrails(frame.balls)
     this.drawBalls(frame.balls)
     frame.particles.draw(this.context)
@@ -194,10 +195,12 @@ export class Renderer {
     this.context.restore()
   }
 
-  private drawShield(width: number, height: number, shieldActive: boolean): void {
+  private drawShield(width: number, shieldY: number, shieldActive: boolean): void {
     if (!shieldActive) {
       return
     }
+
+    const lineY = shieldY - 18
 
     this.context.save()
     this.context.globalCompositeOperation = 'lighter'
@@ -206,8 +209,8 @@ export class Renderer {
     this.context.shadowBlur = 18
     this.context.lineWidth = 4
     this.context.beginPath()
-    this.context.moveTo(28, height - 34)
-    this.context.lineTo(width - 28, height - 34)
+    this.context.moveTo(28, lineY)
+    this.context.lineTo(width - 28, lineY)
     this.context.stroke()
     this.context.restore()
   }

@@ -40,6 +40,10 @@ app.innerHTML = `
 
     <div class="toast" data-hud="toast" role="status" aria-live="polite"></div>
 
+    <div class="touch-guide" aria-hidden="true">
+      <span>拖动任意空白区域控制挡板</span>
+    </div>
+
     <section class="screen-overlay is-visible" data-screen="start">
       <div class="screen-card">
         <p class="eyebrow">Free · Static · EdgeOne Ready</p>
@@ -49,8 +53,8 @@ app.innerHTML = `
         </p>
         <button class="primary-button" data-action="start" type="button">开始游戏</button>
         <div class="control-hints">
-          <span>鼠标 / 触屏移动挡板</span>
-          <span>← → 键控制</span>
+          <span>手机端拖动任意空白区域</span>
+          <span>桌面端鼠标 / ← → 键</span>
           <span>Space 发球 / 继续</span>
           <span>P 暂停</span>
         </div>

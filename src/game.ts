@@ -50,6 +50,9 @@ export class Game {
   private destroyedBrickCount = 0
   private shieldCharges = 0
   private shake = 0
+  private activePointerId: number | null = null
+  private pointerStartClientX = 0
+  private pointerStartTargetX = 0
 
   public constructor(canvas: HTMLCanvasElement) {
     const context = canvas.getContext('2d')
@@ -111,6 +114,7 @@ export class Game {
       score: this.score,
       combo: this.combo,
       shieldActive: this.shieldCharges > 0,
+      shieldY: this.getPlayBottomY(),
       shake: this.shake,
     })
   }
@@ -119,8 +123,10 @@ export class Game {
     window.addEventListener('resize', () => this.resize())
     window.addEventListener('keydown', (event) => this.handleKeyDown(event))
     window.addEventListener('keyup', (event) => this.pressedKeys.delete(event.key))
+    this.canvas.addEventListener('pointerdown', (event) => this.handlePointerDown(event))
     this.canvas.addEventListener('pointermove', (event) => this.handlePointerMove(event))
-    this.canvas.addEventListener('pointerdown', () => this.startOrResume())
+    this.canvas.addEventListener('pointerup', (event) => this.handlePointerEnd(event))
+    this.canvas.addEventListener('pointercancel', (event) => this.handlePointerEnd(event))
     document.querySelectorAll<HTMLElement>('[data-action="start"], [data-action="resume"]').forEach((button) => {
       button.addEventListener('click', () => this.startOrResume())
     })
@@ -149,7 +155,52 @@ export class Game {
     }
   }
 
+  private handlePointerDown(event: PointerEvent): void {
+    event.preventDefault()
+    this.activePointerId = event.pointerId
+    this.pointerStartClientX = event.clientX
+    this.pointerStartTargetX = this.targetPaddleX
+    this.canvas.setPointerCapture(event.pointerId)
+
+    if (event.pointerType !== 'touch') {
+      this.updatePaddleTargetFromAbsolutePointer(event)
+    }
+
+    this.startOrResume()
+  }
+
   private handlePointerMove(event: PointerEvent): void {
+    if (event.pointerType !== 'touch') {
+      this.updatePaddleTargetFromAbsolutePointer(event)
+      return
+    }
+
+    if (this.activePointerId !== event.pointerId) {
+      return
+    }
+
+    const dragSensitivity = 1.35
+    const dragOffset = (event.clientX - this.pointerStartClientX) * dragSensitivity
+    this.targetPaddleX = clamp(
+      this.pointerStartTargetX + dragOffset,
+      this.paddle.width / 2,
+      this.boardWidth - this.paddle.width / 2,
+    )
+  }
+
+  private handlePointerEnd(event: PointerEvent): void {
+    if (this.activePointerId !== event.pointerId) {
+      return
+    }
+
+    this.activePointerId = null
+
+    if (this.canvas.hasPointerCapture(event.pointerId)) {
+      this.canvas.releasePointerCapture(event.pointerId)
+    }
+  }
+
+  private updatePaddleTargetFromAbsolutePointer(event: PointerEvent): void {
     const rect = this.canvas.getBoundingClientRect()
     this.targetPaddleX = clamp(event.clientX - rect.left, this.paddle.width / 2, this.boardWidth - this.paddle.width / 2)
   }
@@ -217,7 +268,7 @@ export class Game {
   private loadLevel(levelIndex: number): void {
     this.bricks = createLevelBricks(levelIndex, this.boardWidth)
     this.powerUps = []
-    this.paddle = new Paddle({ x: this.boardWidth / 2, y: this.boardHeight - 68 })
+    this.paddle = new Paddle({ x: this.boardWidth / 2, y: this.getPaddleY() })
     this.targetPaddleX = this.paddle.position.x
     this.spawnPrimaryBall()
     this.hud.showToast(getLevelName(levelIndex))
@@ -428,14 +479,16 @@ export class Game {
   }
 
   private removeDroppedBalls(): void {
+    const playBottomY = this.getPlayBottomY()
+
     for (const ball of this.balls) {
-      if (ball.position.y - ball.radius <= this.boardHeight) {
+      if (ball.position.y - ball.radius <= playBottomY) {
         continue
       }
 
       if (this.shieldCharges > 0) {
         this.shieldCharges -= 1
-        ball.position.y = this.boardHeight - 44
+        ball.position.y = playBottomY - 22
         ball.velocity.y = -Math.abs(ball.velocity.y)
         this.audio.play('paddle')
         this.hud.showToast('Shield Save')
@@ -508,13 +561,23 @@ export class Game {
     this.canvas.style.width = `${this.boardWidth}px`
     this.canvas.style.height = `${this.boardHeight}px`
     this.context.setTransform(this.devicePixelRatio, 0, 0, this.devicePixelRatio, 0, 0)
-    this.paddle.position.y = this.boardHeight - 68
+    this.paddle.position.y = this.getPaddleY()
     this.paddle.position.x = clamp(this.paddle.position.x, this.paddle.width / 2, this.boardWidth - this.paddle.width / 2)
     this.targetPaddleX = clamp(this.targetPaddleX, this.paddle.width / 2, this.boardWidth - this.paddle.width / 2)
 
     if (this.bricks.length > 0) {
       this.bricks = createLevelBricks(this.levelIndex, this.boardWidth)
     }
+  }
+
+  private getPlayBottomY(): number {
+    const mobileBottomDockHeight = this.boardWidth < 720 ? 126 : 0
+    return this.boardHeight - mobileBottomDockHeight
+  }
+
+  private getPaddleY(): number {
+    const mobileControlDockHeight = this.boardWidth < 720 ? 172 : 68
+    return this.boardHeight - mobileControlDockHeight
   }
 
   private updateHud(): void {

@@ -53,6 +53,7 @@ button {
 
 .top-hud,
 .powerup-bar,
+.touch-guide,
 .screen-card {
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(8, 10, 31, 0.52);
@@ -170,6 +171,20 @@ button {
   box-shadow: 0 0 24px rgba(124, 219, 255, 0.48);
 }
 
+.touch-guide {
+  position: absolute;
+  right: 16px;
+  bottom: 82px;
+  z-index: 2;
+  display: none;
+  padding: 8px 12px;
+  color: rgba(248, 251, 255, 0.66);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
 .toast {
   position: absolute;
   top: 112px;
@@ -284,29 +299,37 @@ h2 {
 
 @media (max-width: 720px) {
   .top-hud {
-    top: max(8px, env(safe-area-inset-top));
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px;
+    top: auto;
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 58px);
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 44px;
+    gap: 5px;
     width: calc(100vw - 16px);
-    padding: 8px;
-    border-radius: 20px;
+    padding: 7px;
+    border-radius: 22px;
   }
 
   .icon-button {
-    grid-column: 1 / -1;
-    min-height: 36px;
-    padding: 0 12px;
+    min-width: 0;
+    min-height: 42px;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .icon-button::before {
+    content: 'Ⅱ';
+    font-size: 17px;
+    font-weight: 900;
   }
 
   .hud-item {
     min-width: 0;
-    padding: 7px 5px;
+    padding: 7px 4px;
     text-align: center;
   }
 
   .hud-item span {
     font-size: 8px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
   }
 
   .hud-item strong {
@@ -316,20 +339,29 @@ h2 {
   }
 
   .toast {
-    top: 152px;
+    top: max(18px, env(safe-area-inset-top));
   }
 
   .powerup-bar {
-    bottom: 10px;
-    width: calc(100vw - 20px);
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: calc(100vw - 16px);
     justify-content: center;
+    padding: 7px;
     border-radius: 22px;
   }
 
   .powerup-bar span {
     flex: 1;
-    padding-inline: 8px;
+    padding: 8px 5px;
+    font-size: 10px;
     text-align: center;
+  }
+
+  .touch-guide {
+    right: 50%;
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 114px);
+    display: block;
+    transform: translateX(50%);
   }
 }
 
