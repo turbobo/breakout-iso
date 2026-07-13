@@ -115,7 +115,22 @@ export class Renderer {
     this.context.lineWidth = 1
     this.context.stroke()
 
-    if (brick.kind === 'reinforced' || brick.kind === 'boss') {
+    if (brick.kind === 'boss') {
+      this.context.shadowBlur = 0
+      this.context.fillStyle = 'rgba(5, 8, 24, 0.62)'
+      roundRect(this.context, rect.x + 7, rect.y + rect.height * 0.5, rect.width - 14, 7, 4)
+      this.context.fill()
+
+      this.context.fillStyle = '#FFFFFF'
+      roundRect(this.context, rect.x + 9, rect.y + rect.height * 0.5 + 2, Math.max(4, (rect.width - 18) * healthRatio), 3, 2)
+      this.context.fill()
+
+      this.context.fillStyle = 'rgba(255, 255, 255, 0.9)'
+      this.context.font = '800 9px system-ui, sans-serif'
+      this.context.textAlign = 'center'
+      this.context.textBaseline = 'middle'
+      this.context.fillText(`${brick.health}/${brick.maxHealth}`, rect.x + rect.width / 2, rect.y + rect.height * 0.32)
+    } else if (brick.kind === 'reinforced') {
       this.context.fillStyle = `rgba(255, 255, 255, ${0.12 + (1 - healthRatio) * 0.18})`
       roundRect(
         this.context,

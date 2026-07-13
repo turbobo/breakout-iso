@@ -22,9 +22,13 @@ export interface LevelSummary {
   difficulty: number
   description: string
   timeLimitSeconds?: number
+  chanceCount: number
 }
 
 const defaultPowerUpDropRate = 0.22
+const hardLevelDifficultyThreshold = 5
+const simpleLevelChanceCount = 1
+const hardLevelChanceCount = 2
 
 const brickColors: Record<string, string> = {
   R: '#FF6B35',
@@ -127,7 +131,7 @@ const levelDefinitions: LevelDefinition[] = [
     ballSpeedMultiplier: 1.08,
     powerUpDropRate: 0.3,
     bossSkillIntervalSeconds: 9,
-    bossHealth: 9,
+    bossHealth: 4,
     pattern: ['....OO....', '..OHHHHO..', '.OHSSSHO.', 'OOHXXHOO.', '.OHSSSHO.', '..OHHHHO..'],
   },
   {
@@ -175,7 +179,7 @@ const levelDefinitions: LevelDefinition[] = [
     ballSpeedMultiplier: 1.18,
     powerUpDropRate: 0.32,
     bossSkillIntervalSeconds: 7,
-    bossHealth: 14,
+    bossHealth: 6,
     pattern: ['...OOOO...', '..OHHHHO..', '.OHSSSHO.', 'OOHXXHOO.', 'OOHXXHOO.', '.OHSSSHO.', '..OHHHHO..', '...OOOO...'],
   },
 ]
@@ -200,6 +204,7 @@ export function getLevelSummaries(): LevelSummary[] {
     difficulty: definition.difficulty,
     description: definition.description,
     timeLimitSeconds: definition.timeLimitSeconds,
+    chanceCount: getLevelChanceCount(index),
   }))
 }
 
@@ -247,6 +252,12 @@ export function createLevelBricks(levelIndex: number, boardWidth: number): Brick
   })
 
   return bricks
+}
+
+export function getLevelChanceCount(levelIndex: number): number {
+  return getLevelDefinition(levelIndex).difficulty >= hardLevelDifficultyThreshold
+    ? hardLevelChanceCount
+    : simpleLevelChanceCount
 }
 
 export function getLevelPowerUpDropRate(levelIndex: number): number {

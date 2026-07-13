@@ -247,6 +247,48 @@ button {
   width: min(420px, calc(100vw - 32px));
 }
 
+.screen-card.compact .primary-button,
+.screen-card.compact .secondary-button {
+  display: block;
+  width: min(260px, 100%);
+  margin: 12px auto 0;
+}
+
+.level-transition-card {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(124, 219, 255, 0.32);
+  background:
+    linear-gradient(145deg, rgba(8, 10, 31, 0.76), rgba(18, 16, 44, 0.68)),
+    rgba(8, 10, 31, 0.52);
+}
+
+.level-transition-card::before {
+  position: absolute;
+  inset: -40% 20% auto;
+  height: 180px;
+  background: radial-gradient(circle, rgba(124, 219, 255, 0.26), transparent 68%);
+  content: '';
+  pointer-events: none;
+}
+
+.level-transition-card > * {
+  position: relative;
+}
+
+.transition-stats {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 18px;
+  padding: 10px 14px;
+  color: #07101f;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f7c948, #7cdbff);
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 18px 42px rgba(124, 219, 255, 0.18);
+}
+
 .eyebrow {
   margin: 0 0 12px;
   color: #f7c948;

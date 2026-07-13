@@ -76,6 +76,17 @@ app.innerHTML = `
       </div>
     </section>
 
+    <section class="screen-overlay" data-screen="transition">
+      <div class="screen-card compact level-transition-card">
+        <p class="eyebrow" data-transition="eyebrow">Level Clear</p>
+        <h2 data-transition="title">下一关已解锁</h2>
+        <p class="screen-copy" data-transition="summary">准备进入下一关。</p>
+        <div class="transition-stats" data-transition="stats"></div>
+        <button class="primary-button" data-action="next-level" type="button">继续下一关</button>
+        <button class="secondary-button" data-action="menu" type="button">选择关卡</button>
+      </div>
+    </section>
+
     <section class="screen-overlay" data-screen="pause">
       <div class="screen-card compact">
         <p class="eyebrow">Paused</p>

@@ -23,7 +23,7 @@ import {
 } from './levels/level-data'
 import { HudController } from './ui/hud'
 
-type GamePhase = 'start' | 'playing' | 'paused' | 'result'
+type GamePhase = 'start' | 'playing' | 'transition' | 'paused' | 'result'
 
 const initialLives = 3
 const initialBallSpeed = 430
@@ -154,6 +154,7 @@ export class Game {
     document.querySelectorAll<HTMLElement>('[data-action="menu"]').forEach((button) => {
       button.addEventListener('click', () => this.returnToMenu())
     })
+    document.querySelector<HTMLElement>('[data-action="next-level"]')?.addEventListener('click', () => this.continueToNextLevel())
     document.querySelector<HTMLElement>('[data-action="pause"]')?.addEventListener('click', () => this.togglePause())
   }
 
@@ -262,6 +263,11 @@ export class Game {
       return
     }
 
+    if (this.phase === 'transition') {
+      this.continueToNextLevel()
+      return
+    }
+
     if (this.phase === 'start') {
       this.levelIndex = this.selectedLevelIndex
       this.resetRun()
@@ -272,8 +278,21 @@ export class Game {
     void this.audio.resume()
   }
 
+  private continueToNextLevel(): void {
+    if (this.phase !== 'transition') {
+      return
+    }
+
+    this.loadLevel(this.levelIndex)
+    this.renderLevelSelect()
+    this.phase = 'playing'
+    this.hud.showScreen('none')
+    void this.audio.resume()
+    this.updateHud()
+  }
+
   private togglePause(): void {
-    if (this.phase === 'start' || this.phase === 'result') {
+    if (this.phase === 'start' || this.phase === 'transition' || this.phase === 'result') {
       return
     }
 
@@ -407,6 +426,8 @@ export class Game {
 
         if (destroyed) {
           this.destroyBrick(brick, ball)
+        } else if (brick.kind === 'boss') {
+          this.hitBossBrick(brick)
         } else {
           this.audio.play('brick', 0.82)
           this.shake = Math.max(this.shake, brick.kind === 'steel' ? 5 : 2)
@@ -415,6 +436,13 @@ export class Game {
         return
       }
     }
+  }
+
+  private hitBossBrick(brick: Brick): void {
+    this.audio.play('explosion', 0.34)
+    this.shake = Math.max(this.shake, 7)
+    this.particles.burst(brick.center, brick.color, 12)
+    this.hud.showToast(`Boss HP ${brick.health}/${brick.maxHealth}`)
   }
 
   private destroyBrick(brick: Brick, ball: Ball): void {
@@ -583,21 +611,38 @@ export class Game {
       return
     }
 
+    const lifeBonus = this.lives * 1000
     const timeBonus = this.levelTimeRemainingSeconds === null ? 0 : Math.ceil(this.levelTimeRemainingSeconds) * 20
-    this.score += this.lives * 1000 + timeBonus
-    this.levelTimeRemainingSeconds = null
-    this.levelIndex += 1
-    this.selectedLevelIndex = Math.min(this.levelIndex, getLevelCount() - 1)
+    const bonusScore = lifeBonus + timeBonus
+    const completedLevelIndex = this.levelIndex
+    const nextLevelIndex = completedLevelIndex + 1
 
-    if (this.levelIndex >= getLevelCount()) {
+    this.score += bonusScore
+    this.levelTimeRemainingSeconds = null
+
+    if (nextLevelIndex >= getLevelCount()) {
       this.levelIndex = getLevelCount() - 1
       this.selectedLevelIndex = this.levelIndex
       this.finish(true)
       return
     }
 
-    this.loadLevel(this.levelIndex)
+    this.levelIndex = nextLevelIndex
+    this.selectedLevelIndex = nextLevelIndex
+    this.phase = 'transition'
+    this.audio.play('win', 0.68)
     this.renderLevelSelect()
+
+    const nextLevelDefinition = getLevelDefinition(nextLevelIndex)
+
+    this.hud.showLevelTransition({
+      completedLevel: completedLevelIndex + 1,
+      nextLevel: nextLevelIndex + 1,
+      nextName: getLevelName(nextLevelIndex),
+      nextMode: nextLevelDefinition.mode,
+      nextDescription: nextLevelDefinition.description,
+      bonusScore,
+    })
   }
 
   private finish(won: boolean): void {

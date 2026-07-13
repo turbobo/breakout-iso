@@ -15,6 +15,17 @@ export interface HudLevelOption {
   difficulty: number
   description: string
   timeLimitSeconds?: number
+  chanceCount: number
+}
+
+export interface LevelTransitionState {
+  completedLevel: number
+  nextLevel: number
+  nextName: string
+  nextMode: string
+  nextDescription: string
+  nextChanceCount: number
+  bonusScore: number
 }
 
 export interface ResultState {
@@ -36,8 +47,13 @@ export class HudController {
   private readonly toastElement = this.requireElement('[data-hud="toast"]')
   private readonly levelListElement = this.requireElement('[data-level-list]')
   private readonly startScreen = this.requireElement('[data-screen="start"]')
+  private readonly transitionScreen = this.requireElement('[data-screen="transition"]')
   private readonly pauseScreen = this.requireElement('[data-screen="pause"]')
   private readonly resultScreen = this.requireElement('[data-screen="result"]')
+  private readonly transitionEyebrow = this.requireElement('[data-transition="eyebrow"]')
+  private readonly transitionTitle = this.requireElement('[data-transition="title"]')
+  private readonly transitionSummary = this.requireElement('[data-transition="summary"]')
+  private readonly transitionStats = this.requireElement('[data-transition="stats"]')
   private readonly resultLabel = this.requireElement('[data-result="label"]')
   private readonly resultTitle = this.requireElement('[data-result="title"]')
   private readonly resultSummary = this.requireElement('[data-result="summary"]')
@@ -83,8 +99,9 @@ export class HudController {
     this.levelListElement.replaceChildren(...levelButtons)
   }
 
-  public showScreen(screenName: 'start' | 'pause' | 'result' | 'none'): void {
+  public showScreen(screenName: 'start' | 'transition' | 'pause' | 'result' | 'none'): void {
     this.startScreen.classList.toggle('is-visible', screenName === 'start')
+    this.transitionScreen.classList.toggle('is-visible', screenName === 'transition')
     this.pauseScreen.classList.toggle('is-visible', screenName === 'pause')
     this.resultScreen.classList.toggle('is-visible', screenName === 'result')
   }
@@ -96,6 +113,15 @@ export class HudController {
     this.toastTimer = window.setTimeout(() => {
       this.toastElement.classList.remove('is-visible')
     }, 1300)
+  }
+
+  public showLevelTransition(state: LevelTransitionState): void {
+    window.clearTimeout(this.toastTimer)
+    this.transitionEyebrow.textContent = `Level ${state.completedLevel} Clear`
+    this.transitionTitle.textContent = `下一关 · ${state.nextName}`
+    this.transitionSummary.textContent = `${formatModeLabel(state.nextMode)} 模式 · ${state.nextDescription}`
+    this.transitionStats.textContent = `奖励 +${state.bonusScore} · 即将进入第 ${state.nextLevel} 关`
+    this.showScreen('transition')
   }
 
   public showResult(state: ResultState): void {
