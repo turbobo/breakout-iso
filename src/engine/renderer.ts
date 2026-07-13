@@ -14,6 +14,7 @@ export interface RenderFrame {
   combo: number
   shieldActive: boolean
   shieldY: number
+  shieldWidth: number
   shake: number
 }
 
@@ -47,7 +48,7 @@ export class Renderer {
     this.drawBricks(frame.bricks)
     this.drawPowerUps(frame.powerUps)
     this.drawPaddle(frame.paddle)
-    this.drawShield(width, frame.shieldY, frame.shieldActive)
+    this.drawShield(width, frame.shieldY, frame.shieldActive, frame.shieldWidth)
     this.drawBallTrails(frame.balls)
     this.drawBalls(frame.balls)
     frame.particles.draw(this.context)
@@ -222,12 +223,16 @@ export class Renderer {
     this.context.restore()
   }
 
-  private drawShield(width: number, shieldY: number, shieldActive: boolean): void {
+  private drawShield(width: number, shieldY: number, shieldActive: boolean, shieldWidth: number): void {
     if (!shieldActive) {
       return
     }
 
     const lineY = shieldY - 18
+    const shieldHalfWidth = Math.min(shieldWidth, width - 32) / 2
+    const shieldCenterX = width / 2
+    const shieldStartX = Math.max(16, shieldCenterX - shieldHalfWidth)
+    const shieldEndX = Math.min(width - 16, shieldCenterX + shieldHalfWidth)
 
     this.context.save()
     this.context.globalCompositeOperation = 'lighter'
@@ -236,8 +241,8 @@ export class Renderer {
     this.context.shadowBlur = 18
     this.context.lineWidth = 4
     this.context.beginPath()
-    this.context.moveTo(28, lineY)
-    this.context.lineTo(width - 28, lineY)
+    this.context.moveTo(shieldStartX, lineY)
+    this.context.lineTo(shieldEndX, lineY)
     this.context.stroke()
     this.context.restore()
   }

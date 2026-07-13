@@ -210,6 +210,7 @@ angle = -90° + hitRatio * 约 52°
 - `HudController.showLevelTransition()` 和 `HudController.showResult()` 只渲染内容，实际切屏由 `Game.setPhase()` 统一触发，确保 phase、覆盖层和焦点状态一致。
 - PC 端 HUD 布局：分数、关卡、模式、计时、机会和暂停按钮以底部横向面板形式居中显示（`bottom: 16px`, `left: 50%`, `max-width: 960px`），道具栏独立放在分数菜单上方（`bottom: 82px`），形成底部双层布局，避免两个菜单重叠；两层均参考移动端胶囊风格；砖块布局使用全画布宽度，通过 `desktopBottomDockHeight: 144` 和 `desktopControlDockHeight: 144` 预留底部空间，确保挡板和弹球不会进入 HUD 区域。
 - 移动端 HUD 布局：分数菜单贴近安全区底部（`bottom: max(8px, env(safe-area-inset-bottom))`），道具栏固定在分数菜单上方（`bottom: calc(max(8px, env(safe-area-inset-bottom)) + 120px)`），显示顺序与 PC 端一致；触控提示进一步上移，形成移动端底部双层兼容布局；通过 `mobileBottomDockHeight: 212` 和 `mobileControlDockHeight: 252` 预留空间，避免遮挡挡板、弹球和触控操作区域。
+- 移动端挡板与护盾适配：挡板基础宽度通过 `getResponsiveSegmentWidth()` 按屏宽缩放到约 30%，并限制在 88～112px；PC 端保持 132px。护盾在移动端居中缩短为约 62% 屏宽，并限制在 160～260px，视觉长度和实际拦截范围一致，避免小屏下挡板和护盾过长。
 - 开始、过渡、暂停和结算覆盖层使用 `dialog` 语义、`aria-modal` 和标题关联，隐藏时同步 `aria-hidden` 与 `inert`，避免不可见控件进入 Tab 顺序。
 - 屏幕切换后焦点自动落到当前覆盖层主按钮；回到游戏时焦点返回 Canvas，保证键盘用户能继续用空格、方向键和快捷键操作。
 - 按钮和关卡卡片提供 `:focus-visible` 高对比焦点样式。
@@ -265,6 +266,7 @@ value: number string
 - `npm run build` 执行 TypeScript 类型检查并生成生产构建。
 - `npm run test` 使用 Vitest 覆盖核心数学工具和砖块实体规则，作为后续碰撞、边界和类型守卫改动的回归基线。
 - 挡板边界统一通过 `clampPaddleCenterX()` 约束，测试覆盖普通边界和棋盘窄于挡板的兜底场景。
+- 移动端挡板和护盾宽度统一通过 `getResponsiveSegmentWidth()` 计算，测试覆盖桌面保持原宽、移动端比例缩放、最小/最大值限制和极窄屏兜底。
 - 挡板扫掠碰撞通过 `resolveSweptCircleTopRectCollision()` 覆盖高速球跨帧穿过挡板顶部的回归场景，并验证横向错过时不会误判。
 - 砖块类型判断统一提供 `isSteelBrick()`、`isBossBrick()` 和 `isDestructibleBrick()` 类型守卫，测试覆盖钢铁、首领和普通砖块行为。
 

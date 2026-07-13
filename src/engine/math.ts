@@ -38,6 +38,24 @@ export function clampPaddleCenterX(centerX: number, paddleWidth: number, boardWi
   return clamp(centerX, halfPaddleWidth, boardWidth - halfPaddleWidth)
 }
 
+export function getResponsiveSegmentWidth(
+  boardWidth: number,
+  desktopWidth: number,
+  mobileBreakpoint: number,
+  mobileWidthRatio: number,
+  mobileMinWidth: number,
+  mobileMaxWidth: number,
+): number {
+  if (boardWidth >= mobileBreakpoint) {
+    return desktopWidth
+  }
+
+  const safeMobileMaxWidth = Math.min(mobileMaxWidth, boardWidth)
+  const safeMobileMinWidth = Math.min(mobileMinWidth, safeMobileMaxWidth)
+
+  return clamp(boardWidth * mobileWidthRatio, safeMobileMinWidth, safeMobileMaxWidth)
+}
+
 export function randomBetween(min: number, max: number): number {
   return min + Math.random() * (max - min)
 }

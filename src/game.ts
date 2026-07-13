@@ -6,6 +6,7 @@ import { PowerUp, pickPowerUp, type PowerUpKind } from './entities/powerup'
 import {
   clamp,
   clampPaddleCenterX,
+  getResponsiveSegmentWidth,
   getSpeed,
   reflectVelocity,
   resolveCircleRectCollision,
@@ -50,6 +51,14 @@ const gameConfig = {
   minBoardWidth: 320,
   minBoardHeight: 520,
   mobileBreakpoint: 720,
+  desktopPaddleWidth: 132,
+  mobilePaddleWidthRatio: 0.3,
+  mobileMinPaddleWidth: 88,
+  mobileMaxPaddleWidth: 112,
+  desktopShieldWidthInset: 56,
+  mobileShieldWidthRatio: 0.62,
+  mobileMinShieldWidth: 160,
+  mobileMaxShieldWidth: 260,
   mobileBottomDockHeight: 212,
   desktopBottomDockHeight: 144,
   mobileControlDockHeight: 252,
@@ -204,6 +213,7 @@ export class Game {
       combo: this.combo,
       shieldActive: this.shieldCharges > 0,
       shieldY: this.getPlayBottomY(),
+      shieldWidth: this.getShieldWidth(),
       shake: this.shake,
     })
   }
@@ -461,7 +471,7 @@ export class Game {
     this.lives = getLevelChanceCount(levelIndex)
     this.levelTimeRemainingSeconds = levelDefinition.timeLimitSeconds ?? null
     this.bossSkillCooldownSeconds = levelDefinition.bossSkillIntervalSeconds ?? 0
-    this.paddle = new Paddle({ x: this.boardWidth / 2, y: this.getPaddleY() })
+    this.paddle = new Paddle({ x: this.boardWidth / 2, y: this.getPaddleY() }, this.getPaddleBaseWidth())
     this.targetPaddleX = this.paddle.position.x
     this.spawnPrimaryBall()
     this.hud.showToast(`${getLevelName(levelIndex)} · ${this.getLevelModeLabel()}`)
@@ -791,7 +801,7 @@ export class Game {
         continue
       }
 
-      if (this.shieldCharges > 0) {
+      if (this.shieldCharges > 0 && this.isBallWithinShield(ball)) {
         this.shieldCharges -= 1
         ball.position.y = playBottomY - gameConfig.shieldBounceOffsetY
         ball.velocity.y = -Math.abs(ball.velocity.y)
@@ -892,6 +902,7 @@ export class Game {
     this.canvas.style.width = `${this.boardWidth}px`
     this.canvas.style.height = `${this.boardHeight}px`
     this.context.setTransform(this.devicePixelRatio, 0, 0, this.devicePixelRatio, 0, 0)
+    this.paddle.setBaseWidth(this.getPaddleBaseWidth(), this.boardWidth)
     this.paddle.position.y = this.getPaddleY()
     this.paddle.position.x = clampPaddleCenterX(this.paddle.position.x, this.paddle.width, this.boardWidth)
     this.targetPaddleX = clampPaddleCenterX(this.targetPaddleX, this.paddle.width, this.boardWidth)
@@ -928,6 +939,37 @@ export class Game {
       ? gameConfig.mobileControlDockHeight
       : gameConfig.desktopControlDockHeight
     return this.boardHeight - mobileControlDockHeight
+  }
+
+  private getPaddleBaseWidth(): number {
+    return getResponsiveSegmentWidth(
+      this.boardWidth,
+      gameConfig.desktopPaddleWidth,
+      gameConfig.mobileBreakpoint,
+      gameConfig.mobilePaddleWidthRatio,
+      gameConfig.mobileMinPaddleWidth,
+      gameConfig.mobileMaxPaddleWidth,
+    )
+  }
+
+  private getShieldWidth(): number {
+    return getResponsiveSegmentWidth(
+      this.boardWidth,
+      this.boardWidth - gameConfig.desktopShieldWidthInset,
+      gameConfig.mobileBreakpoint,
+      gameConfig.mobileShieldWidthRatio,
+      gameConfig.mobileMinShieldWidth,
+      gameConfig.mobileMaxShieldWidth,
+    )
+  }
+
+  private isBallWithinShield(ball: Ball): boolean {
+    const shieldHalfWidth = this.getShieldWidth() / 2
+    const shieldCenterX = this.boardWidth / 2
+    const shieldStartX = shieldCenterX - shieldHalfWidth
+    const shieldEndX = shieldCenterX + shieldHalfWidth
+
+    return ball.position.x + ball.radius >= shieldStartX && ball.position.x - ball.radius <= shieldEndX
   }
 
   private updateHud(): void {

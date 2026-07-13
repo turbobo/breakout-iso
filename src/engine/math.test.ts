@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   clamp,
   clampPaddleCenterX,
+  getResponsiveSegmentWidth,
   reflectVelocity,
   resolveCircleRectCollision,
   resolveSweptCircleTopRectCollision,
@@ -23,6 +24,20 @@ describe('math helpers', () => {
 
   it('centers the paddle when the board is narrower than the paddle', () => {
     expect(clampPaddleCenterX(20, 500, 320)).toBe(160)
+  })
+
+  it('keeps desktop responsive segment width unchanged', () => {
+    expect(getResponsiveSegmentWidth(960, 132, 720, 0.3, 88, 112)).toBe(132)
+  })
+
+  it('scales mobile responsive segment width within configured bounds', () => {
+    expect(getResponsiveSegmentWidth(320, 132, 720, 0.3, 88, 112)).toBe(96)
+    expect(getResponsiveSegmentWidth(260, 132, 720, 0.3, 88, 112)).toBe(88)
+    expect(getResponsiveSegmentWidth(430, 132, 720, 0.3, 88, 112)).toBe(112)
+  })
+
+  it('does not exceed the board width for very narrow responsive segments', () => {
+    expect(getResponsiveSegmentWidth(72, 132, 720, 0.3, 88, 112)).toBe(72)
   })
 
   it('reflects velocity around the collision normal', () => {
