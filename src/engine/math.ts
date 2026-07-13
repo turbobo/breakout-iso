@@ -24,6 +24,15 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }
 
+export function clampPaddleCenterX(centerX: number, paddleWidth: number, boardWidth: number): number {
+  if (boardWidth <= paddleWidth) {
+    return boardWidth / 2
+  }
+
+  const halfPaddleWidth = paddleWidth / 2
+  return clamp(centerX, halfPaddleWidth, boardWidth - halfPaddleWidth)
+}
+
 export function randomBetween(min: number, max: number): number {
   return min + Math.random() * (max - min)
 }

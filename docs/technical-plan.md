@@ -253,7 +253,14 @@ value: number string
 - 入口在 `pagehide` 和 Vite HMR dispose 时调用 `game.dispose()`，避免页面卸载或热更新后残留事件监听器。
 - 动效优先使用 `transform`、`opacity`、Canvas 绘制。
 
-## 15. 后续扩展
+## 15. 验证策略
+
+- `npm run build` 执行 TypeScript 类型检查并生成生产构建。
+- `npm run test` 使用 Vitest 覆盖核心数学工具和砖块实体规则，作为后续碰撞、边界和类型守卫改动的回归基线。
+- 挡板边界统一通过 `clampPaddleCenterX()` 约束，测试覆盖普通边界和棋盘窄于挡板的兜底场景。
+- 砖块类型判断统一提供 `isSteelBrick()`、`isBossBrick()` 和 `isDestructibleBrick()` 类型守卫，测试覆盖钢铁、首领和普通砖块行为。
+
+## 16. 后续扩展
 
 后续可添加：
 

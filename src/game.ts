@@ -1,10 +1,11 @@
 import { SynthAudio } from './audio/synth'
 import { Ball } from './entities/ball'
-import type { Brick } from './entities/brick'
+import { isBossBrick, isDestructibleBrick, isSteelBrick, type Brick } from './entities/brick'
 import { Paddle } from './entities/paddle'
 import { PowerUp, pickPowerUp, type PowerUpKind } from './entities/powerup'
 import {
   clamp,
+  clampPaddleCenterX,
   getSpeed,
   reflectVelocity,
   resolveCircleRectCollision,
@@ -311,10 +312,10 @@ export class Game {
 
     const dragSensitivity = 1.35
     const dragOffset = (event.clientX - this.pointerStartClientX) * dragSensitivity
-    this.targetPaddleX = clamp(
+    this.targetPaddleX = clampPaddleCenterX(
       this.pointerStartTargetX + dragOffset,
-      this.paddle.width / 2,
-      this.boardWidth - this.paddle.width / 2,
+      this.paddle.width,
+      this.boardWidth,
     )
   }
 
@@ -332,7 +333,7 @@ export class Game {
 
   private updatePaddleTargetFromAbsolutePointer(event: PointerEvent): void {
     const rect = this.canvas.getBoundingClientRect()
-    this.targetPaddleX = clamp(event.clientX - rect.left, this.paddle.width / 2, this.boardWidth - this.paddle.width / 2)
+    this.targetPaddleX = clampPaddleCenterX(event.clientX - rect.left, this.paddle.width, this.boardWidth)
   }
 
   private updateKeyboardPaddle(deltaSeconds: number): void {
@@ -344,10 +345,10 @@ export class Game {
     }
 
     const direction = movingLeft ? -1 : 1
-    this.targetPaddleX = clamp(
+    this.targetPaddleX = clampPaddleCenterX(
       this.targetPaddleX + direction * this.paddle.speed * deltaSeconds,
-      this.paddle.width / 2,
-      this.boardWidth - this.paddle.width / 2,
+      this.paddle.width,
+      this.boardWidth,
     )
   }
 
@@ -517,7 +518,7 @@ export class Game {
 
         const destroyed = brick.hit()
 
-        if (!ball.isFireball || brick.kind === 'steel') {
+        if (!ball.isFireball || isSteelBrick(brick)) {
           ball.position.x += collision.normal.x * collision.penetration
           ball.position.y += collision.normal.y * collision.penetration
           ball.velocity = reflectVelocity(ball.velocity, collision.normal)
@@ -525,11 +526,11 @@ export class Game {
 
         if (destroyed) {
           this.destroyBrick(brick, ball)
-        } else if (brick.kind === 'boss') {
+        } else if (isBossBrick(brick)) {
           this.hitBossBrick(brick)
         } else {
           this.audio.play('brick', 0.82)
-          this.shake = Math.max(this.shake, brick.kind === 'steel' ? 5 : 2)
+          this.shake = Math.max(this.shake, isSteelBrick(brick) ? 5 : 2)
         }
 
         break
@@ -637,7 +638,7 @@ export class Game {
 
   private explodeAround(sourceBrick: Brick): void {
     for (const brick of this.bricks) {
-      if (!brick.alive || brick.kind === 'steel' || brick.kind === 'boss') {
+      if (!brick.alive || isSteelBrick(brick) || isBossBrick(brick)) {
         continue
       }
 
@@ -772,7 +773,7 @@ export class Game {
   }
 
   private checkLevelComplete(): void {
-    const hasDestructibleBricks = this.bricks.some((brick) => brick.alive && brick.kind !== 'steel')
+    const hasDestructibleBricks = this.bricks.some((brick) => brick.alive && isDestructibleBrick(brick))
 
     if (hasDestructibleBricks) {
       return
@@ -840,8 +841,8 @@ export class Game {
     this.canvas.style.height = `${this.boardHeight}px`
     this.context.setTransform(this.devicePixelRatio, 0, 0, this.devicePixelRatio, 0, 0)
     this.paddle.position.y = this.getPaddleY()
-    this.paddle.position.x = clamp(this.paddle.position.x, this.paddle.width / 2, this.boardWidth - this.paddle.width / 2)
-    this.targetPaddleX = clamp(this.targetPaddleX, this.paddle.width / 2, this.boardWidth - this.paddle.width / 2)
+    this.paddle.position.x = clampPaddleCenterX(this.paddle.position.x, this.paddle.width, this.boardWidth)
+    this.targetPaddleX = clampPaddleCenterX(this.targetPaddleX, this.paddle.width, this.boardWidth)
 
     if (this.bricks.length > 0) {
       const resizedBricks = createLevelBricks(this.levelIndex, this.boardWidth)
@@ -930,7 +931,7 @@ export class Game {
   }
 
   private hasActiveBossBrick(): boolean {
-    return this.bricks.some((brick) => brick.alive && brick.kind === 'boss')
+    return this.bricks.some((brick) => brick.alive && isBossBrick(brick))
   }
 
   private getCurrentBaseBallSpeed(): number {

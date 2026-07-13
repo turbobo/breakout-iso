@@ -1,5 +1,4 @@
-import type { Rect, Vector2 } from '../engine/math'
-import { clamp } from '../engine/math'
+import { clampPaddleCenterX, type Rect, type Vector2 } from '../engine/math'
 
 export class Paddle {
   public position: Vector2
@@ -18,11 +17,11 @@ export class Paddle {
     const targetWidth = this.wideTimer > 0 ? this.baseWidth * 1.5 : this.baseWidth
     this.width += (targetWidth - this.width) * Math.min(1, deltaSeconds * 10)
     this.position.x += (targetX - this.position.x) * Math.min(1, deltaSeconds * 16)
-    this.position.x = clamp(this.position.x, this.width / 2, boardWidth - this.width / 2)
+    this.position.x = clampPaddleCenterX(this.position.x, this.width, boardWidth)
   }
 
   public moveBy(amount: number, boardWidth: number): void {
-    this.position.x = clamp(this.position.x + amount, this.width / 2, boardWidth - this.width / 2)
+    this.position.x = clampPaddleCenterX(this.position.x + amount, this.width, boardWidth)
   }
 
   public get rect(): Rect {

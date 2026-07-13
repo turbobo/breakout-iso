@@ -1,6 +1,9 @@
 import type { Rect, Vector2 } from '../engine/math'
 
 export type BrickKind = 'normal' | 'reinforced' | 'steel' | 'explosive' | 'boss'
+export type SteelBrick = Brick & { readonly kind: 'steel' }
+export type BossBrick = Brick & { readonly kind: 'boss' }
+export type DestructibleBrick = Brick & { readonly kind: Exclude<BrickKind, 'steel'> }
 
 export interface BrickConfig {
   position: Vector2
@@ -71,4 +74,16 @@ export class Brick {
       y: this.position.y + this.height / 2,
     }
   }
+}
+
+export function isSteelBrick(brick: Brick): brick is SteelBrick {
+  return brick.kind === 'steel'
+}
+
+export function isBossBrick(brick: Brick): brick is BossBrick {
+  return brick.kind === 'boss'
+}
+
+export function isDestructibleBrick(brick: Brick): brick is DestructibleBrick {
+  return brick.kind !== 'steel'
 }
