@@ -47,56 +47,56 @@ const levelDefinitions: LevelDefinition[] = [
     name: '热身练习',
     mode: 'classic',
     difficulty: 1,
-    description: '基础三排砖块，适合熟悉挡板反弹手感。',
-    pattern: ['RRRRRRRRRR', 'YYYYYYYYYY', 'GGGGGGGGGG'],
+    description: '四排高密度基础砖块，适合熟悉挡板反弹手感。',
+    pattern: ['RRRRRRRRRRRR', 'YYYYYYYYYYYY', 'GGGGGGGGGGGG', 'BBBBBBBBBBBB'],
   },
   {
     name: '初遇护甲',
     mode: 'classic',
     difficulty: 2,
-    description: '第一次出现加固砖块，需要连续击中。',
-    pattern: ['RRRRRRRRRR', 'YHYYYYYYHY', 'GGGGGGGGGG', 'BBBBBBBBBB'],
+    description: '更密集的加固砖块阵列，需要连续击中。',
+    pattern: ['RRRRRRRRRRRR', 'YYHYYYYYYHYY', 'GGGGHHHHGGGG', 'BBBBBBBBBBBB', 'PPPPPPPPPPPP'],
   },
   {
     name: '钢铁之门',
     mode: 'classic',
     difficulty: 2,
-    description: '钢铁砖块形成门洞，训练斜线反弹。',
-    pattern: ['RRRRRRRRRR', 'YSSYYYYSSY', 'GGGGHHGGGG', 'BBBBBBBBBB'],
+    description: '钢铁砖块形成多层门洞，训练斜线反弹。',
+    pattern: ['RRRRRRRRRRRR', 'YYSSYYYYSSYY', 'GGGGHHHHGGGG', 'BSSBBBBBBSSB', 'PPPPPPPPPPPP'],
   },
   {
     name: '连锁爆破',
     mode: 'timed',
     difficulty: 3,
-    description: '限时爆破关，利用爆炸砖块快速清场。',
-    timeLimitSeconds: 75,
+    description: '限时爆破关，利用爆炸砖块快速清理密集阵列。',
+    timeLimitSeconds: 90,
     powerUpDropRate: 0.25,
-    pattern: ['RRXRRRRXRR', 'YHYYYYYYHY', 'GGGGXXGGGG', 'BBBBBBBBBB'],
+    pattern: ['RRXRRRRRRXRR', 'YYHYYYYYYHYY', 'GGGGXXXXGGGG', 'BBBBBBBBBBBB', 'PPXXPPPPXXPP'],
   },
   {
     name: '霓虹阶梯',
     mode: 'classic',
     difficulty: 3,
-    description: '阶梯空洞布局，考验控球角度。',
+    description: '更长阶梯空洞布局，考验控球角度。',
     ballSpeedMultiplier: 1.04,
-    pattern: ['R........R', 'RR......RR', 'HHH....HHH', 'BBBB..BBBB', 'PPPPPPPPPP'],
+    pattern: ['R..........R', 'RR........RR', 'HHH......HHH', 'BBBB....BBBB', 'GGGGG..GGGGG', 'PPPPPPPPPPPP'],
   },
   {
     name: '金属花园',
     mode: 'classic',
     difficulty: 4,
-    description: '钢铁和爆炸混合出现，路线更复杂。',
-    pattern: ['GGGGGGGGGG', 'GSSGHHGSSG', 'GXGGGGGGXG', 'BBBBBBBBBB', 'PPPPPPPPPP'],
+    description: '钢铁、加固和爆炸混合铺开，路线更复杂。',
+    pattern: ['GGGGGGGGGGGG', 'GSSGHHHHGSSG', 'GXGGGGGGGGXG', 'BBBBXXXXBBBB', 'PPPPPPPPPPPP', 'YYHHYYYYHHYY'],
   },
   {
     name: '交叉火力',
     mode: 'timed',
     difficulty: 4,
     description: '限时十字火力关，爆炸砖块集中在关键通道。',
-    timeLimitSeconds: 85,
+    timeLimitSeconds: 100,
     ballSpeedMultiplier: 1.06,
     powerUpDropRate: 0.26,
-    pattern: ['RRRXXRRRXX', 'YHYYYYYYHY', '..SSHHSS..', 'BBBBXXBBBB', 'PPPPPPPPPP'],
+    pattern: ['RRRXXRRRXXRR', 'YYHYYYYYYHYY', '..SSHHHHSS..', 'BBBBXXXXBBBB', 'PPPPPPPPPPPP', 'GGXXGGGGXXGG'],
   },
   {
     name: '狭窄通道',
@@ -104,24 +104,24 @@ const levelDefinitions: LevelDefinition[] = [
     difficulty: 5,
     description: '钢铁墙压缩反弹空间，需要稳定控球。',
     ballSpeedMultiplier: 1.08,
-    pattern: ['SSSRRRRSSS', 'RHHHXXHHHR', 'YYYYSSYYYY', 'GGGGGGGGGG', 'BBBBBBBBBB'],
+    pattern: ['SSSRRRRRRSSS', 'RHHHXXXXHHHR', 'YYYYSSSSYYYY', 'GGGGGGGGGGGG', 'BBBBBBBBBBBB', 'PPSSPPPPSSPP'],
   },
   {
     name: '霓虹之心',
     mode: 'classic',
     difficulty: 5,
-    description: '图案关卡，空位更多但爆炸点更隐蔽。',
-    pattern: ['.RR..RR...', 'RHHRRHHR..', 'RXXHHXXR..', '.PPHHPP...', '..BBBB....'],
+    description: '更饱满的图案关卡，空位更多但爆炸点更隐蔽。',
+    pattern: ['.RR....RR...', 'RHHR..RHHR..', 'RXXHHHHXXR..', '.PPHHHHPP...', '..BBBBBBBB..', '...GGGGGG...'],
   },
   {
     name: '终局网格',
     mode: 'timed',
     difficulty: 6,
-    description: '限时网格终测，需要快速打开钢铁间隙。',
-    timeLimitSeconds: 95,
+    description: '限时高密度网格终测，需要快速打开钢铁间隙。',
+    timeLimitSeconds: 115,
     ballSpeedMultiplier: 1.1,
     powerUpDropRate: 0.28,
-    pattern: ['RXHSSSHXR', 'YHYXXYHY.', 'GGSSHHGGG', 'BBBBXXBBB', 'PPPPPPPPP'],
+    pattern: ['RXHSSSSSSSHXRR', 'YHYXXYYYYXXYHY', 'GGGSSHHHHSSGGG', 'BBBBBXXXXBBBBB', 'PPPPPSSSSPPPPP', 'YYYXXGGGGXXYYY'],
   },
   {
     name: '棱镜首领',
@@ -132,25 +132,25 @@ const levelDefinitions: LevelDefinition[] = [
     powerUpDropRate: 0.3,
     bossSkillIntervalSeconds: 9,
     bossHealth: 4,
-    pattern: ['....OO....', '..OHHHHO..', '.OHSSSHO.', 'OOHXXHOO.', '.OHSSSHO.', '..OHHHHO..'],
+    pattern: ['.....OOOO.....', '...OOHHHHOO...', '..OOHSSSSHOO..', '.OOHHXXXXHHOO.', '..OOHSSSSHOO..', '...OOHHHHOO...', '.....OOOO.....'],
   },
   {
     name: '一分钟冲刺',
     mode: 'timed',
     difficulty: 7,
-    description: '一分钟冲刺关，道具掉落更高但球速更快。',
-    timeLimitSeconds: 60,
+    description: '高速冲刺关，道具掉落更高但球速更快。',
+    timeLimitSeconds: 80,
     ballSpeedMultiplier: 1.14,
     powerUpDropRate: 0.34,
-    pattern: ['RXRXRXRXRX', 'YHYHYHYHYH', 'GXGXGXGXGX', 'BHBHBHBHBH', 'PPPPPPPPPP'],
+    pattern: ['RXRXRXRXRXRXRX', 'YHYHYHYHYHYHYH', 'GXGXGXGXGXGXGX', 'BHBHBHBHBHBHBH', 'PPPPPPPPPPPPPP', 'SSXXSSXXSSXXSS'],
   },
   {
     name: '护盾迷宫',
     mode: 'classic',
     difficulty: 7,
-    description: '钢铁迷宫关，必须从侧边找入口。',
+    description: '高密度钢铁迷宫关，必须从侧边找入口。',
     ballSpeedMultiplier: 1.12,
-    pattern: ['SSSS..SSSS', 'RHHHXXHHHR', 'R.SS..SS.R', 'YYYYHHYYYY', 'BBBBXXBBBB', 'PPPPPPPPPP'],
+    pattern: ['SSSSS....SSSSS', 'RHHHXXXXXXHHHR', 'R.SSS....SSS.R', 'YYYYHHHHHHYYYY', 'BBBBXXXXXXBBBB', 'PPPPSSSSSSPPPP', 'GGGGGGGGGGGGGG'],
   },
   {
     name: '爆破花瓣',
@@ -159,17 +159,17 @@ const levelDefinitions: LevelDefinition[] = [
     description: '爆炸砖块像花瓣一样连锁展开。',
     ballSpeedMultiplier: 1.16,
     powerUpDropRate: 0.27,
-    pattern: ['..XRRX....', '.XHYYHX...', 'XHSSSSHX..', '.XHGGHX...', '..XBBX....', 'PPPPPPPPPP'],
+    pattern: ['...XRRRRX.....', '..XHYYYYHX....', '.XHSSSSSSHX...', 'XXHGGGGGGHXX..', '.XHSSSSSSHX...', '..XHBBBBHX....', 'PPPPPPPPPPPPPP'],
   },
   {
     name: '超频挑战',
     mode: 'timed',
     difficulty: 8,
-    description: '高速限时关，保留机会比清场更难。',
-    timeLimitSeconds: 80,
+    description: '高速高密度限时关，保留机会比清场更难。',
+    timeLimitSeconds: 100,
     ballSpeedMultiplier: 1.22,
     powerUpDropRate: 0.3,
-    pattern: ['RRHHHHHHRR', 'YXXSSXXYY', 'GGHHHHHHGG', 'BXXSSXXBB', 'PPHHHHHHPP'],
+    pattern: ['RRRHHHHHHHHRRR', 'YYXXSSSSXXYYYY', 'GGGHHHHHHHHGGG', 'BBXXSSSSXXBBBB', 'PPPHHHHHHHHPPP', 'RRXXGGGGXXRRRR'],
   },
   {
     name: '日蚀首领',
@@ -180,7 +180,7 @@ const levelDefinitions: LevelDefinition[] = [
     powerUpDropRate: 0.32,
     bossSkillIntervalSeconds: 7,
     bossHealth: 6,
-    pattern: ['...OOOO...', '..OHHHHO..', '.OHSSSHO.', 'OOHXXHOO.', 'OOHXXHOO.', '.OHSSSHO.', '..OHHHHO..', '...OOOO...'],
+    pattern: ['....OOOOOO....', '...OOHHHHOO...', '..OOHSSSSHOO..', '.OOHHXXXXHHOO.', '.OOHHXXXXHHOO.', '..OOHSSSSHOO..', '...OOHHHHOO...', '....OOOOOO....', 'RRSSRRRRSSRRRR'],
   },
 ]
 
@@ -211,13 +211,13 @@ export function getLevelSummaries(): LevelSummary[] {
 export function createLevelBricks(levelIndex: number, boardWidth: number): Brick[] {
   const definition = getLevelDefinition(levelIndex)
   const columns = Math.max(...definition.pattern.map((row) => row.length))
-  const brickGap = clampLayoutValue(boardWidth * 0.012, 5, 8)
+  const brickGap = clampLayoutValue(boardWidth * 0.009, 4, 6)
   const horizontalMargin = clampLayoutValue(boardWidth * 0.04, 12, 44)
   const availableGridWidth = boardWidth - horizontalMargin * 2
-  const maxGridWidth = boardWidth >= 900 ? 820 : availableGridWidth
+  const maxGridWidth = boardWidth >= 900 ? 840 : availableGridWidth
   const gridWidth = Math.max(280, Math.min(availableGridWidth, maxGridWidth))
   const brickWidth = (gridWidth - brickGap * (columns - 1)) / columns
-  const brickHeight = clampLayoutValue(boardWidth * 0.045, 17, 24)
+  const brickHeight = clampLayoutValue(boardWidth * 0.032, 14, 20)
   const topOffset = boardWidth < 720 ? 92 : 106
   const startX = (boardWidth - gridWidth) / 2
   const bricks: Brick[] = []
