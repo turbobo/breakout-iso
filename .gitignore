@@ -25,7 +25,6 @@ dist-ssr
 
 # Build artifacts
 /build
-/docs
 /uploads
 /outputs
 *.png
