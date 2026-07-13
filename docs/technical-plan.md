@@ -238,12 +238,16 @@ key: neon-breakout-best-score
 value: number string
 ```
 
-## 14. 性能策略
+## 14. 性能与生命周期策略
 
 - 不使用第三方运行时框架。
 - 游戏主体用 Canvas 单画布渲染。
 - HUD 和关卡选择用 DOM，避免把文字 UI 全部绘制进 Canvas。
-- 粒子生命周期短，结束后从数组移除。
+- 粒子系统使用原地压缩清理失效粒子，避免逐个 `splice` 带来的数组搬移和 GC 压力。
+- 背景渐变按画布尺寸缓存，砖块渐变按颜色、类型和高度缓存，减少每帧重复创建 `CanvasGradient`。
+- 音效系统对 `resume()`、播放和关闭链路统一捕获异常，浏览器禁止自动播放或 AudioContext 关闭失败时只降级跳过音效。
+- `Game.dispose()` 会取消动画帧、释放指针捕获、解绑窗口/画布/按钮事件，并关闭音频上下文。
+- 入口在 `pagehide` 和 Vite HMR dispose 时调用 `game.dispose()`，避免页面卸载或热更新后残留事件监听器。
 - 动效优先使用 `transform`、`opacity`、Canvas 绘制。
 
 ## 15. 后续扩展

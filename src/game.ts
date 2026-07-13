@@ -63,6 +63,9 @@ export class Game {
   private selectedLevelIndex = 0
   private levelTimeRemainingSeconds: number | null = null
   private bossSkillCooldownSeconds = 0
+  private animationFrameId: number | null = null
+  private disposed = false
+  private readonly eventCleanups: Array<() => void> = []
 
   public constructor(canvas: HTMLCanvasElement) {
     const context = canvas.getContext('2d')
@@ -83,11 +86,41 @@ export class Game {
   }
 
   public start(): void {
+    if (this.disposed || this.animationFrameId !== null) {
+      return
+    }
+
     this.lastFrameTime = performance.now()
-    window.requestAnimationFrame((time) => this.tick(time))
+    this.animationFrameId = window.requestAnimationFrame((time) => this.tick(time))
+  }
+
+  public dispose(): void {
+    if (this.disposed) {
+      return
+    }
+
+    this.disposed = true
+
+    if (this.animationFrameId !== null) {
+      window.cancelAnimationFrame(this.animationFrameId)
+      this.animationFrameId = null
+    }
+
+    if (this.activePointerId !== null && this.canvas.hasPointerCapture(this.activePointerId)) {
+      this.canvas.releasePointerCapture(this.activePointerId)
+    }
+
+    this.activePointerId = null
+    this.pressedKeys.clear()
+    this.eventCleanups.splice(0).forEach((cleanup) => cleanup())
+    this.audio.dispose()
   }
 
   private tick(currentTime: number): void {
+    if (this.disposed) {
+      return
+    }
+
     const deltaSeconds = Math.min(1 / 30, (currentTime - this.lastFrameTime) / 1000)
     this.lastFrameTime = currentTime
 
@@ -96,7 +129,7 @@ export class Game {
     }
 
     this.draw()
-    window.requestAnimationFrame((time) => this.tick(time))
+    this.animationFrameId = window.requestAnimationFrame((time) => this.tick(time))
   }
 
   private update(deltaSeconds: number): void {
@@ -138,24 +171,56 @@ export class Game {
   }
 
   private registerEvents(): void {
-    window.addEventListener('resize', () => this.resize())
-    window.addEventListener('keydown', (event) => this.handleKeyDown(event))
-    window.addEventListener('keyup', (event) => this.pressedKeys.delete(event.key))
-    this.canvas.addEventListener('pointerdown', (event) => this.handlePointerDown(event))
-    this.canvas.addEventListener('pointermove', (event) => this.handlePointerMove(event))
-    this.canvas.addEventListener('pointerup', (event) => this.handlePointerEnd(event))
-    this.canvas.addEventListener('pointercancel', (event) => this.handlePointerEnd(event))
-    document.querySelectorAll<HTMLElement>('[data-action="start"], [data-action="resume"]').forEach((button) => {
-      button.addEventListener('click', () => this.startOrResume())
+    const handleResize = (): void => this.resize()
+    const handleKeyDown = (event: KeyboardEvent): void => this.handleKeyDown(event)
+    const handleKeyUp = (event: KeyboardEvent): void => {
+      this.pressedKeys.delete(event.key)
+    }
+    const handlePointerDown = (event: PointerEvent): void => this.handlePointerDown(event)
+    const handlePointerMove = (event: PointerEvent): void => this.handlePointerMove(event)
+    const handlePointerEnd = (event: PointerEvent): void => this.handlePointerEnd(event)
+
+    window.addEventListener('resize', handleResize)
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    this.canvas.addEventListener('pointerdown', handlePointerDown)
+    this.canvas.addEventListener('pointermove', handlePointerMove)
+    this.canvas.addEventListener('pointerup', handlePointerEnd)
+    this.canvas.addEventListener('pointercancel', handlePointerEnd)
+
+    this.eventCleanups.push(
+      () => window.removeEventListener('resize', handleResize),
+      () => window.removeEventListener('keydown', handleKeyDown),
+      () => window.removeEventListener('keyup', handleKeyUp),
+      () => this.canvas.removeEventListener('pointerdown', handlePointerDown),
+      () => this.canvas.removeEventListener('pointermove', handlePointerMove),
+      () => this.canvas.removeEventListener('pointerup', handlePointerEnd),
+      () => this.canvas.removeEventListener('pointercancel', handlePointerEnd),
+    )
+
+    this.registerActionHandlers('[data-action="start"], [data-action="resume"]', () => this.startOrResume())
+    this.registerActionHandlers('[data-action="restart"]', () => this.restart())
+    this.registerActionHandlers('[data-action="menu"]', () => this.returnToMenu())
+    this.registerActionHandler('[data-action="next-level"]', () => this.continueToNextLevel())
+    this.registerActionHandler('[data-action="pause"]', () => this.togglePause())
+  }
+
+  private registerActionHandlers(selector: string, listener: () => void): void {
+    document.querySelectorAll<HTMLElement>(selector).forEach((button) => {
+      button.addEventListener('click', listener)
+      this.eventCleanups.push(() => button.removeEventListener('click', listener))
     })
-    document.querySelectorAll<HTMLElement>('[data-action="restart"]').forEach((button) => {
-      button.addEventListener('click', () => this.restart())
-    })
-    document.querySelectorAll<HTMLElement>('[data-action="menu"]').forEach((button) => {
-      button.addEventListener('click', () => this.returnToMenu())
-    })
-    document.querySelector<HTMLElement>('[data-action="next-level"]')?.addEventListener('click', () => this.continueToNextLevel())
-    document.querySelector<HTMLElement>('[data-action="pause"]')?.addEventListener('click', () => this.togglePause())
+  }
+
+  private registerActionHandler(selector: string, listener: () => void): void {
+    const button = document.querySelector<HTMLElement>(selector)
+
+    if (!button) {
+      return
+    }
+
+    button.addEventListener('click', listener)
+    this.eventCleanups.push(() => button.removeEventListener('click', listener))
   }
 
   private renderLevelSelect(): void {
@@ -275,7 +340,13 @@ export class Game {
 
     this.phase = 'playing'
     this.hud.showScreen('none')
-    void this.audio.resume()
+    this.resumeAudio()
+  }
+
+  private resumeAudio(): void {
+    void this.audio.resume().catch(() => {
+      // SynthAudio 已统一记录错误，这里只吞掉启动链路中的异步失败。
+    })
   }
 
   private continueToNextLevel(): void {
@@ -287,7 +358,7 @@ export class Game {
     this.renderLevelSelect()
     this.phase = 'playing'
     this.hud.showScreen('none')
-    void this.audio.resume()
+    this.resumeAudio()
     this.updateHud()
   }
 

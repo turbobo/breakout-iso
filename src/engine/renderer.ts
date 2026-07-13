@@ -19,6 +19,9 @@ export interface RenderFrame {
 
 export class Renderer {
   private readonly context: CanvasRenderingContext2D
+  private readonly brickGradientCache = new Map<string, CanvasGradient>()
+  private backgroundGradient: CanvasGradient | null = null
+  private backgroundGradientKey = ''
 
   public constructor(context: CanvasRenderingContext2D) {
     this.context = context
@@ -28,6 +31,7 @@ export class Renderer {
     const width = this.context.canvas.clientWidth
     const height = this.context.canvas.clientHeight
 
+    this.resetGradientCachesIfCanvasSizeChanged(width, height)
     this.context.clearRect(0, 0, width, height)
     this.drawBackground(width, height)
 
@@ -52,10 +56,7 @@ export class Renderer {
   }
 
   private drawBackground(width: number, height: number): void {
-    const gradient = this.context.createLinearGradient(0, 0, width, height)
-    gradient.addColorStop(0, '#080A1F')
-    gradient.addColorStop(0.5, '#15122E')
-    gradient.addColorStop(1, '#2A1435')
+    const gradient = this.getBackgroundGradient(width, height)
 
     this.context.fillStyle = gradient
     this.context.fillRect(0, 0, width, height)
@@ -99,10 +100,7 @@ export class Renderer {
     const flashAlpha = brick.flash * 0.65
     const healthRatio = Number.isFinite(brick.maxHealth) ? brick.health / brick.maxHealth : 1
     const color = brick.kind === 'steel' ? '#A8B0C2' : brick.color
-    const gradient = this.context.createLinearGradient(rect.x, rect.y, rect.x, rect.y + rect.height)
-
-    gradient.addColorStop(0, lighten(color, brick.kind === 'steel' ? 0.32 : 0.22))
-    gradient.addColorStop(1, darken(color, brick.kind === 'steel' ? 0.32 : 0.18))
+    const gradient = this.getBrickGradient(color, brick.kind === 'steel', rect.y, rect.height)
 
     this.context.save()
     this.context.shadowColor = brick.kind === 'steel' ? 'rgba(180, 190, 210, 0.34)' : color
@@ -288,6 +286,48 @@ export class Renderer {
     this.context.textAlign = 'right'
     this.context.fillText(`${score} · x${Math.max(1, combo)}`, width - 26, 120)
     this.context.restore()
+  }
+
+  private resetGradientCachesIfCanvasSizeChanged(width: number, height: number): void {
+    const backgroundGradientKey = `${width}x${height}`
+
+    if (this.backgroundGradientKey === backgroundGradientKey) {
+      return
+    }
+
+    this.backgroundGradientKey = backgroundGradientKey
+    this.backgroundGradient = null
+    this.brickGradientCache.clear()
+  }
+
+  private getBackgroundGradient(width: number, height: number): CanvasGradient {
+    if (this.backgroundGradient) {
+      return this.backgroundGradient
+    }
+
+    const gradient = this.context.createLinearGradient(0, 0, width, height)
+    gradient.addColorStop(0, '#080A1F')
+    gradient.addColorStop(0.5, '#15122E')
+    gradient.addColorStop(1, '#2A1435')
+    this.backgroundGradient = gradient
+
+    return gradient
+  }
+
+  private getBrickGradient(color: string, isSteel: boolean, topY: number, height: number): CanvasGradient {
+    const gradientKey = `${color}:${isSteel ? 'steel' : 'normal'}:${topY.toFixed(2)}:${height.toFixed(2)}`
+    const cachedGradient = this.brickGradientCache.get(gradientKey)
+
+    if (cachedGradient) {
+      return cachedGradient
+    }
+
+    const gradient = this.context.createLinearGradient(0, topY, 0, topY + height)
+    gradient.addColorStop(0, lighten(color, isSteel ? 0.32 : 0.22))
+    gradient.addColorStop(1, darken(color, isSteel ? 0.32 : 0.18))
+    this.brickGradientCache.set(gradientKey, gradient)
+
+    return gradient
   }
 }
 

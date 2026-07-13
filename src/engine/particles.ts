@@ -30,18 +30,21 @@ export class ParticleSystem {
   }
 
   public update(deltaSeconds: number): void {
+    let activeParticleCount = 0
+
     for (const particle of this.particles) {
       particle.position.x += particle.velocity.x * deltaSeconds
       particle.position.y += particle.velocity.y * deltaSeconds
       particle.velocity.y += 420 * deltaSeconds
       particle.life -= deltaSeconds
-    }
 
-    for (let particleIndex = this.particles.length - 1; particleIndex >= 0; particleIndex -= 1) {
-      if (this.particles[particleIndex].life <= 0) {
-        this.particles.splice(particleIndex, 1)
+      if (particle.life > 0) {
+        this.particles[activeParticleCount] = particle
+        activeParticleCount += 1
       }
     }
+
+    this.particles.length = activeParticleCount
   }
 
   public draw(context: CanvasRenderingContext2D): void {

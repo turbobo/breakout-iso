@@ -19,20 +19,26 @@ declare global {
 export class SynthAudio {
   private audioContext: AudioContext | null = null
   private muted = false
+  private hasLoggedAudioError = false
 
   public async resume(): Promise<void> {
-    if (!this.audioContext) {
-      const AudioContextConstructor = window.AudioContext || window.webkitAudioContext
+    try {
+      if (!this.audioContext) {
+        const AudioContextConstructor = window.AudioContext || window.webkitAudioContext
 
-      if (!AudioContextConstructor) {
-        return
+        if (!AudioContextConstructor) {
+          return
+        }
+
+        this.audioContext = new AudioContextConstructor()
       }
 
-      this.audioContext = new AudioContextConstructor()
-    }
-
-    if (this.audioContext.state === 'suspended') {
-      await this.audioContext.resume()
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume()
+      }
+    } catch (error) {
+      this.handleAudioError(error)
+      throw error
     }
   }
 
@@ -46,18 +52,38 @@ export class SynthAudio {
       return
     }
 
-    void this.resume().then(() => {
-      if (!this.audioContext) {
-        return
-      }
+    void this.resume()
+      .then(() => this.playSound(soundName, intensity))
+      .catch((error) => this.handleAudioError(error))
+  }
 
-      const now = this.audioContext.currentTime
+  public dispose(): void {
+    const audioContext = this.audioContext
+
+    if (!audioContext || audioContext.state === 'closed') {
+      this.audioContext = null
+      return
+    }
+
+    this.audioContext = null
+    void audioContext.close().catch((error) => this.handleAudioError(error))
+  }
+
+  private playSound(soundName: SoundName, intensity: number): void {
+    const audioContext = this.audioContext
+
+    if (!audioContext) {
+      return
+    }
+
+    try {
+      const now = audioContext.currentTime
       const frequencies = soundMap[soundName]
 
       frequencies.forEach((frequency, index) => {
-        const oscillator = this.audioContext!.createOscillator()
-        const gain = this.audioContext!.createGain()
-        const filter = this.audioContext!.createBiquadFilter()
+        const oscillator = audioContext.createOscillator()
+        const gain = audioContext.createGain()
+        const filter = audioContext.createBiquadFilter()
         const startTime = now + index * 0.038
         const duration = soundName === 'explosion' || soundName === 'lose' ? 0.16 : 0.09
 
@@ -71,10 +97,21 @@ export class SynthAudio {
         gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration)
         oscillator.connect(filter)
         filter.connect(gain)
-        gain.connect(this.audioContext!.destination)
+        gain.connect(audioContext.destination)
         oscillator.start(startTime)
         oscillator.stop(startTime + duration + 0.02)
       })
-    })
+    } catch (error) {
+      this.handleAudioError(error)
+    }
+  }
+
+  private handleAudioError(error: unknown): void {
+    if (this.hasLoggedAudioError) {
+      return
+    }
+
+    this.hasLoggedAudioError = true
+    console.warn('音频系统暂时不可用，已跳过本次播放。', error)
   }
 }

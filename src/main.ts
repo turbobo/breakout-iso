@@ -116,4 +116,18 @@ if (!canvas) {
 }
 
 const game = new Game(canvas)
+const disposeGame = (): void => game.dispose()
+
+window.addEventListener('pagehide', disposeGame, { once: true })
 game.start()
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    window.removeEventListener('pagehide', disposeGame)
+    game.dispose()
+  })
+}
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => game.dispose())
+}
