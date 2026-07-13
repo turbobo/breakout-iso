@@ -9,7 +9,7 @@ if (!app) {
 
 app.innerHTML = `
   <main class="game-shell" aria-label="霓虹弹球打砖块">
-    <canvas class="game-canvas" data-game-canvas aria-label="弹球打砖块游戏画布"></canvas>
+    <canvas class="game-canvas" data-game-canvas tabindex="0" aria-label="弹球打砖块游戏画布"></canvas>
 
     <section class="top-hud" aria-label="游戏状态">
       <div class="hud-item">
@@ -52,10 +52,10 @@ app.innerHTML = `
       <span>拖动任意空白区域控制挡板</span>
     </div>
 
-    <section class="screen-overlay is-visible" data-screen="start">
+    <section class="screen-overlay is-visible" data-screen="start" role="dialog" aria-modal="true" aria-labelledby="start-title" aria-hidden="false">
       <div class="screen-card">
         <p class="eyebrow">免费 · 静态部署 · EdgeOne 就绪</p>
-        <h1>霓虹弹球打砖块</h1>
+        <h1 id="start-title">霓虹弹球打砖块</h1>
         <p class="screen-copy">
           纯前端画布弹球打砖块：16 个关卡、常规 / 限时 / 首领模式、连击、道具、爆炸砖块和护盾。
         </p>
@@ -76,10 +76,10 @@ app.innerHTML = `
       </div>
     </section>
 
-    <section class="screen-overlay" data-screen="transition">
+    <section class="screen-overlay" data-screen="transition" role="dialog" aria-modal="true" aria-labelledby="transition-title" aria-hidden="true">
       <div class="screen-card compact level-transition-card">
         <p class="eyebrow" data-transition="eyebrow">关卡完成</p>
-        <h2 data-transition="title">确认进入下一关？</h2>
+        <h2 id="transition-title" data-transition="title">确认进入下一关？</h2>
         <p class="screen-copy" data-transition="summary">确认后将开始下一关挑战。</p>
         <div class="transition-stats" data-transition="stats"></div>
         <button class="primary-button" data-action="next-level" type="button">确认进入下一关</button>
@@ -87,20 +87,20 @@ app.innerHTML = `
       </div>
     </section>
 
-    <section class="screen-overlay" data-screen="pause">
+    <section class="screen-overlay" data-screen="pause" role="dialog" aria-modal="true" aria-labelledby="pause-title" aria-hidden="true">
       <div class="screen-card compact">
         <p class="eyebrow">已暂停</p>
-        <h2>游戏暂停</h2>
+        <h2 id="pause-title">游戏暂停</h2>
         <button class="primary-button" data-action="resume" type="button">继续</button>
         <button class="secondary-button" data-action="restart" type="button">重新开始</button>
         <button class="secondary-button" data-action="menu" type="button">选择关卡</button>
       </div>
     </section>
 
-    <section class="screen-overlay" data-screen="result">
+    <section class="screen-overlay" data-screen="result" role="dialog" aria-modal="true" aria-labelledby="result-title" aria-hidden="true">
       <div class="screen-card compact">
         <p class="eyebrow" data-result="label">游戏结束</p>
-        <h2 data-result="title">再来一局</h2>
+        <h2 id="result-title" data-result="title">再来一局</h2>
         <p class="screen-copy" data-result="summary">得分 0</p>
         <button class="primary-button" data-action="restart" type="button">重新开始</button>
         <button class="secondary-button" data-action="menu" type="button">选择关卡</button>

@@ -144,6 +144,17 @@ button {
   transform: translateY(-1px);
 }
 
+.icon-button:focus-visible,
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.level-card:focus-visible {
+  outline: 3px solid rgba(247, 201, 72, 0.95);
+  outline-offset: 4px;
+  box-shadow:
+    0 0 0 6px rgba(8, 10, 31, 0.72),
+    0 0 34px rgba(247, 201, 72, 0.42);
+}
+
 .powerup-bar {
   position: absolute;
   bottom: 16px;

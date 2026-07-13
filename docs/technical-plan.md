@@ -207,6 +207,9 @@ angle = -90° + hitRatio * 约 52°
 - `src/ui/hud.ts` 负责更新分数、最高分、关卡、模式、计时、机会和道具状态。
 - `HudController.renderLevelSelect()` 根据关卡摘要动态生成按钮式关卡卡片。
 - `HudController.showLevelTransition()` 渲染下一关名称、模式、描述、奖励分数和机会数。
+- 开始、过渡、暂停和结算覆盖层使用 `dialog` 语义、`aria-modal` 和标题关联，隐藏时同步 `aria-hidden` 与 `inert`，避免不可见控件进入 Tab 顺序。
+- 屏幕切换后焦点自动落到当前覆盖层主按钮；回到游戏时焦点返回 Canvas，保证键盘用户能继续用空格、方向键和快捷键操作。
+- 按钮和关卡卡片提供 `:focus-visible` 高对比焦点样式。
 - 暂停页、下一关过渡页和结算页都提供“选择关卡”入口，便于直接切换挑战。
 
 ## 11. 道具实现

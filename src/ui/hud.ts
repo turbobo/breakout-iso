@@ -57,6 +57,7 @@ export class HudController {
   private readonly resultLabel = this.requireElement('[data-result="label"]')
   private readonly resultTitle = this.requireElement('[data-result="title"]')
   private readonly resultSummary = this.requireElement('[data-result="summary"]')
+  private readonly gameCanvas = this.requireElement('[data-game-canvas]')
   private toastTimer = 0
 
   public update(state: HudState): void {
@@ -101,10 +102,11 @@ export class HudController {
   }
 
   public showScreen(screenName: 'start' | 'transition' | 'pause' | 'result' | 'none'): void {
-    this.startScreen.classList.toggle('is-visible', screenName === 'start')
-    this.transitionScreen.classList.toggle('is-visible', screenName === 'transition')
-    this.pauseScreen.classList.toggle('is-visible', screenName === 'pause')
-    this.resultScreen.classList.toggle('is-visible', screenName === 'result')
+    this.setScreenVisibility(this.startScreen, screenName === 'start')
+    this.setScreenVisibility(this.transitionScreen, screenName === 'transition')
+    this.setScreenVisibility(this.pauseScreen, screenName === 'pause')
+    this.setScreenVisibility(this.resultScreen, screenName === 'result')
+    this.focusActiveScreen(screenName)
   }
 
   public showToast(message: string): void {
@@ -131,6 +133,39 @@ export class HudController {
     this.resultTitle.textContent = state.won ? '通关成功' : '再来一局'
     this.resultSummary.textContent = `得分 ${state.score} · 最高分 ${state.bestScore} · 到达第 ${state.level} 关 · ${state.mode} · 最大连击 x${Math.max(1, state.combo)}`
     this.showScreen('result')
+  }
+
+  private setScreenVisibility(screen: HTMLElement, visible: boolean): void {
+    screen.classList.toggle('is-visible', visible)
+    screen.setAttribute('aria-hidden', String(!visible))
+    screen.toggleAttribute('inert', !visible)
+  }
+
+  private focusActiveScreen(screenName: 'start' | 'transition' | 'pause' | 'result' | 'none'): void {
+    if (screenName === 'none') {
+      this.gameCanvas.focus({ preventScroll: true })
+      return
+    }
+
+    const activeScreen = this.getScreenElement(screenName)
+    const primaryControl = activeScreen.querySelector<HTMLElement>('.primary-button, button')
+    primaryControl?.focus({ preventScroll: true })
+  }
+
+  private getScreenElement(screenName: 'start' | 'transition' | 'pause' | 'result'): HTMLElement {
+    if (screenName === 'start') {
+      return this.startScreen
+    }
+
+    if (screenName === 'transition') {
+      return this.transitionScreen
+    }
+
+    if (screenName === 'pause') {
+      return this.pauseScreen
+    }
+
+    return this.resultScreen
   }
 
   private requireElement(selector: string): HTMLElement {
