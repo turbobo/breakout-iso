@@ -26,9 +26,35 @@ import { HudController } from './ui/hud'
 
 type GamePhase = 'start' | 'playing' | 'transition' | 'paused' | 'result'
 
-const initialBallSpeed = 430
-const maxBallSpeed = 760
-const speedIncreaseEveryDestroyedBricks = 8
+const gameConfig = {
+  initialBallSpeed: 430,
+  maxBallSpeed: 760,
+  speedIncreaseEveryDestroyedBricks: 8,
+  initialPaddleX: 480,
+  initialPaddleY: 590,
+  initialBallSpawnOffsetY: 36,
+  initialBallVelocityRatioX: 0.42,
+  paddleHitAngleRange: 0.92,
+  maxComboMultiplier: 8,
+  explosiveBlastRadius: 78,
+  ballSpeedIncreaseMultiplier: 1.03,
+  maxBalls: 5,
+  multiBallAngleOffsets: [-0.48, 0.48],
+  widePowerUpDurationSeconds: 15,
+  fireballPowerUpDurationSeconds: 10,
+  shieldBounceOffsetY: 22,
+  maxDevicePixelRatio: 2,
+  minBoardWidth: 320,
+  minBoardHeight: 520,
+  mobileBreakpoint: 720,
+  mobileBottomDockHeight: 184,
+  desktopBottomDockHeight: 0,
+  mobileControlDockHeight: 228,
+  desktopControlDockHeight: 68,
+  bossPulseSpeedMultiplier: 1.08,
+  defaultBossSkillIntervalSeconds: 8,
+  brickCollisionCellSize: 96,
+} as const
 
 export class Game {
   private readonly canvas: HTMLCanvasElement
@@ -45,8 +71,8 @@ export class Game {
   private balls: Ball[] = []
   private bricks: Brick[] = []
   private powerUps: PowerUp[] = []
-  private paddle = new Paddle({ x: 480, y: 590 })
-  private targetPaddleX = 480
+  private paddle = new Paddle({ x: gameConfig.initialPaddleX, y: gameConfig.initialPaddleY })
+  private targetPaddleX: number = gameConfig.initialPaddleX
   private lastFrameTime = 0
   private score = 0
   private bestScore = readBestScore()
@@ -66,6 +92,9 @@ export class Game {
   private animationFrameId: number | null = null
   private disposed = false
   private readonly eventCleanups: Array<() => void> = []
+  private readonly brickCollisionBuckets = new Map<number, Brick[]>()
+  private readonly brickCollisionCandidates: Brick[] = []
+  private brickCollisionBucketColumnCount = 1
 
   public constructor(canvas: HTMLCanvasElement) {
     const context = canvas.getContext('2d')
@@ -408,6 +437,7 @@ export class Game {
     const levelDefinition = getLevelDefinition(levelIndex)
 
     this.bricks = createLevelBricks(levelIndex, this.boardWidth)
+    this.rebuildBrickCollisionBuckets()
     this.powerUps = []
     this.lives = getLevelChanceCount(levelIndex)
     this.levelTimeRemainingSeconds = levelDefinition.timeLimitSeconds ?? null
@@ -423,8 +453,8 @@ export class Game {
 
     this.balls = [
       new Ball(
-        { x: this.paddle.position.x, y: this.paddle.position.y - 36 },
-        { x: baseBallSpeed * 0.42, y: -baseBallSpeed },
+        { x: this.paddle.position.x, y: this.paddle.position.y - gameConfig.initialBallSpawnOffsetY },
+        { x: baseBallSpeed * gameConfig.initialBallVelocityRatioX, y: -baseBallSpeed },
       ),
     ]
   }
@@ -464,8 +494,8 @@ export class Game {
         -1,
         1,
       )
-      const speed = clamp(getSpeed(ball.velocity), this.getCurrentBaseBallSpeed(), maxBallSpeed)
-      const angle = -Math.PI / 2 + hitRatio * 0.92
+      const speed = clamp(getSpeed(ball.velocity), this.getCurrentBaseBallSpeed(), gameConfig.maxBallSpeed)
+      const angle = -Math.PI / 2 + hitRatio * gameConfig.paddleHitAngleRange
 
       ball.position.y -= collision.penetration + 1
       ball.velocity.x = Math.cos(angle) * speed
@@ -476,11 +506,9 @@ export class Game {
 
   private handleBrickCollisions(): void {
     for (const ball of this.balls) {
-      for (const brick of this.bricks) {
-        if (!brick.alive) {
-          continue
-        }
+      const candidateBricks = this.collectBrickCollisionCandidates(ball)
 
+      for (const brick of candidateBricks) {
         const collision = resolveCircleRectCollision(ball, brick.rect)
 
         if (!collision) {
@@ -509,6 +537,75 @@ export class Game {
     }
   }
 
+  private collectBrickCollisionCandidates(ball: Ball): Brick[] {
+    this.brickCollisionCandidates.length = 0
+
+    const minColumn = Math.max(0, Math.floor((ball.position.x - ball.radius) / gameConfig.brickCollisionCellSize))
+    const maxColumn = Math.min(
+      this.brickCollisionBucketColumnCount - 1,
+      Math.floor((ball.position.x + ball.radius) / gameConfig.brickCollisionCellSize),
+    )
+    const minRow = Math.max(0, Math.floor((ball.position.y - ball.radius) / gameConfig.brickCollisionCellSize))
+    const maxRow = Math.max(minRow, Math.floor((ball.position.y + ball.radius) / gameConfig.brickCollisionCellSize))
+
+    for (let rowIndex = minRow; rowIndex <= maxRow; rowIndex += 1) {
+      for (let columnIndex = minColumn; columnIndex <= maxColumn; columnIndex += 1) {
+        const bucket = this.brickCollisionBuckets.get(this.getBrickCollisionBucketKey(columnIndex, rowIndex))
+
+        if (!bucket) {
+          continue
+        }
+
+        for (const brick of bucket) {
+          if (!brick.alive || this.brickCollisionCandidates.includes(brick)) {
+            continue
+          }
+
+          this.brickCollisionCandidates.push(brick)
+        }
+      }
+    }
+
+    return this.brickCollisionCandidates
+  }
+
+  private rebuildBrickCollisionBuckets(): void {
+    this.brickCollisionBuckets.clear()
+    this.brickCollisionBucketColumnCount = Math.max(
+      1,
+      Math.ceil(this.boardWidth / gameConfig.brickCollisionCellSize),
+    )
+
+    for (const brick of this.bricks) {
+      const rect = brick.rect
+      const minColumn = Math.max(0, Math.floor(rect.x / gameConfig.brickCollisionCellSize))
+      const maxColumn = Math.min(
+        this.brickCollisionBucketColumnCount - 1,
+        Math.floor((rect.x + rect.width) / gameConfig.brickCollisionCellSize),
+      )
+      const minRow = Math.max(0, Math.floor(rect.y / gameConfig.brickCollisionCellSize))
+      const maxRow = Math.max(minRow, Math.floor((rect.y + rect.height) / gameConfig.brickCollisionCellSize))
+
+      for (let rowIndex = minRow; rowIndex <= maxRow; rowIndex += 1) {
+        for (let columnIndex = minColumn; columnIndex <= maxColumn; columnIndex += 1) {
+          const bucketKey = this.getBrickCollisionBucketKey(columnIndex, rowIndex)
+          const bucket = this.brickCollisionBuckets.get(bucketKey)
+
+          if (bucket) {
+            bucket.push(brick)
+            continue
+          }
+
+          this.brickCollisionBuckets.set(bucketKey, [brick])
+        }
+      }
+    }
+  }
+
+  private getBrickCollisionBucketKey(columnIndex: number, rowIndex: number): number {
+    return rowIndex * this.brickCollisionBucketColumnCount + columnIndex
+  }
+
   private hitBossBrick(brick: Brick): void {
     this.audio.play('explosion', 0.34)
     this.shake = Math.max(this.shake, 7)
@@ -520,7 +617,7 @@ export class Game {
     this.combo += 1
     this.maxCombo = Math.max(this.maxCombo, this.combo)
     this.destroyedBrickCount += 1
-    this.score += brick.score * Math.min(8, Math.max(1, this.combo))
+    this.score += brick.score * Math.min(gameConfig.maxComboMultiplier, Math.max(1, this.combo))
     this.particles.burst(brick.center, brick.color, brick.kind === 'explosive' ? 30 : 15)
     this.audio.play(brick.kind === 'explosive' ? 'explosion' : 'brick', 1 + Math.min(1, this.combo * 0.06))
     this.shake = Math.max(this.shake, brick.kind === 'explosive' ? 12 : 4)
@@ -533,7 +630,7 @@ export class Game {
       this.powerUps.push(new PowerUp(pickPowerUp(), brick.center))
     }
 
-    if (this.destroyedBrickCount % speedIncreaseEveryDestroyedBricks === 0) {
+    if (this.destroyedBrickCount % gameConfig.speedIncreaseEveryDestroyedBricks === 0) {
       this.increaseBallSpeed(ball)
     }
   }
@@ -546,7 +643,7 @@ export class Game {
 
       const distance = Math.hypot(brick.center.x - sourceBrick.center.x, brick.center.y - sourceBrick.center.y)
 
-      if (distance > 78 || brick === sourceBrick) {
+      if (distance > gameConfig.explosiveBlastRadius || brick === sourceBrick) {
         continue
       }
 
@@ -557,7 +654,7 @@ export class Game {
   }
 
   private increaseBallSpeed(ball: Ball): void {
-    const nextSpeed = Math.min(maxBallSpeed, getSpeed(ball.velocity) * 1.03)
+    const nextSpeed = Math.min(gameConfig.maxBallSpeed, getSpeed(ball.velocity) * gameConfig.ballSpeedIncreaseMultiplier)
     ball.velocity = scaleToLength(ball.velocity, nextSpeed)
     this.hud.showToast('速度提升')
   }
@@ -591,12 +688,12 @@ export class Game {
     }
 
     if (kind === 'wide') {
-      this.paddle.wideTimer = 15
+      this.paddle.wideTimer = gameConfig.widePowerUpDurationSeconds
     }
 
     if (kind === 'fireball') {
       this.balls.forEach((ball) => {
-        ball.fireballTimer = 10
+        ball.fireballTimer = gameConfig.fireballPowerUpDurationSeconds
       })
     }
 
@@ -611,14 +708,13 @@ export class Game {
   private applyMultiBall(): void {
     const sourceBall = this.balls[0]
 
-    if (!sourceBall || this.balls.length >= 5) {
+    if (!sourceBall || this.balls.length >= gameConfig.maxBalls) {
       return
     }
 
     const speed = getSpeed(sourceBall.velocity)
-    const angles = [-0.48, 0.48]
 
-    for (const angleOffset of angles) {
+    for (const angleOffset of gameConfig.multiBallAngleOffsets) {
       const baseAngle = Math.atan2(sourceBall.velocity.y, sourceBall.velocity.x)
       this.balls.push(
         new Ball(
@@ -643,7 +739,7 @@ export class Game {
 
       if (this.shieldCharges > 0) {
         this.shieldCharges -= 1
-        ball.position.y = playBottomY - 22
+        ball.position.y = playBottomY - gameConfig.shieldBounceOffsetY
         ball.velocity.y = -Math.abs(ball.velocity.y)
         this.audio.play('paddle')
         this.hud.showToast('护盾抵挡')
@@ -735,9 +831,9 @@ export class Game {
   }
 
   private resize(): void {
-    this.devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2)
-    this.boardWidth = Math.max(320, window.innerWidth)
-    this.boardHeight = Math.max(520, window.innerHeight)
+    this.devicePixelRatio = Math.min(window.devicePixelRatio || 1, gameConfig.maxDevicePixelRatio)
+    this.boardWidth = Math.max(gameConfig.minBoardWidth, window.innerWidth)
+    this.boardHeight = Math.max(gameConfig.minBoardHeight, window.innerHeight)
     this.canvas.width = Math.floor(this.boardWidth * this.devicePixelRatio)
     this.canvas.height = Math.floor(this.boardHeight * this.devicePixelRatio)
     this.canvas.style.width = `${this.boardWidth}px`
@@ -763,16 +859,21 @@ export class Game {
       })
 
       this.bricks = resizedBricks
+      this.rebuildBrickCollisionBuckets()
     }
   }
 
   private getPlayBottomY(): number {
-    const mobileBottomDockHeight = this.boardWidth < 720 ? 184 : 0
+    const mobileBottomDockHeight = this.boardWidth < gameConfig.mobileBreakpoint
+      ? gameConfig.mobileBottomDockHeight
+      : gameConfig.desktopBottomDockHeight
     return this.boardHeight - mobileBottomDockHeight
   }
 
   private getPaddleY(): number {
-    const mobileControlDockHeight = this.boardWidth < 720 ? 228 : 68
+    const mobileControlDockHeight = this.boardWidth < gameConfig.mobileBreakpoint
+      ? gameConfig.mobileControlDockHeight
+      : gameConfig.desktopControlDockHeight
     return this.boardHeight - mobileControlDockHeight
   }
 
@@ -815,14 +916,12 @@ export class Game {
     }
 
     this.triggerBossSkill()
-    this.bossSkillCooldownSeconds = levelDefinition.bossSkillIntervalSeconds ?? 8
+    this.bossSkillCooldownSeconds = levelDefinition.bossSkillIntervalSeconds ?? gameConfig.defaultBossSkillIntervalSeconds
   }
 
   private triggerBossSkill(): void {
-    const targetSpeedMultiplier = 1.08
-
     this.balls.forEach((ball) => {
-      const nextSpeed = Math.min(maxBallSpeed, getSpeed(ball.velocity) * targetSpeedMultiplier)
+      const nextSpeed = Math.min(gameConfig.maxBallSpeed, getSpeed(ball.velocity) * gameConfig.bossPulseSpeedMultiplier)
       ball.velocity = scaleToLength(ball.velocity, nextSpeed)
     })
     this.shake = Math.max(this.shake, 10)
@@ -835,7 +934,10 @@ export class Game {
   }
 
   private getCurrentBaseBallSpeed(): number {
-    return Math.min(maxBallSpeed, initialBallSpeed * (getLevelDefinition(this.levelIndex).ballSpeedMultiplier ?? 1))
+    return Math.min(
+      gameConfig.maxBallSpeed,
+      gameConfig.initialBallSpeed * (getLevelDefinition(this.levelIndex).ballSpeedMultiplier ?? 1),
+    )
   }
 
   private getLevelModeLabel(levelIndex = this.levelIndex): string {

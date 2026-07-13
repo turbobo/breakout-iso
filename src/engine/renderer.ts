@@ -247,15 +247,23 @@ export class Renderer {
     this.context.globalCompositeOperation = 'lighter'
 
     for (const ball of balls) {
-      ball.trail.forEach((position, index) => {
-        const alpha = Math.max(0, 1 - index / ball.trail.length) * 0.26
+      const trailLength = ball.trailLength
+
+      for (let trailIndex = 0; trailIndex < trailLength; trailIndex += 1) {
+        const position = ball.getTrailPosition(trailIndex)
+
+        if (!position) {
+          continue
+        }
+
+        const alpha = Math.max(0, 1 - trailIndex / trailLength) * 0.26
         this.context.fillStyle = ball.isFireball
           ? `rgba(255, 107, 53, ${alpha})`
           : `rgba(124, 219, 255, ${alpha})`
         this.context.beginPath()
-        this.context.arc(position.x, position.y, ball.radius * (1.3 - index / ball.trail.length), 0, Math.PI * 2)
+        this.context.arc(position.x, position.y, ball.radius * (1.3 - trailIndex / trailLength), 0, Math.PI * 2)
         this.context.fill()
-      })
+      }
     }
 
     this.context.restore()
