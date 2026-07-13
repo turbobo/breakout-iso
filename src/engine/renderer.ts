@@ -93,8 +93,9 @@ export class Renderer {
   }
 
   private drawBrick(brick: Brick): void {
-    const radius = 9
     const rect = brick.rect
+    const radius = Math.min(9, rect.height / 2)
+    const inset = Math.max(4, Math.min(7, rect.height * 0.34))
     const flashAlpha = brick.flash * 0.65
     const healthRatio = Number.isFinite(brick.maxHealth) ? brick.health / brick.maxHealth : 1
     const color = brick.kind === 'steel' ? '#A8B0C2' : brick.color
@@ -116,28 +117,41 @@ export class Renderer {
     this.context.stroke()
 
     if (brick.kind === 'boss') {
+      const bossBarHeight = Math.max(4, rect.height * 0.28)
+      const bossBarY = rect.y + rect.height * 0.55
+      const bossTextSize = Math.max(7, Math.min(9, rect.height * 0.45))
+
       this.context.shadowBlur = 0
       this.context.fillStyle = 'rgba(5, 8, 24, 0.62)'
-      roundRect(this.context, rect.x + 7, rect.y + rect.height * 0.5, rect.width - 14, 7, 4)
+      roundRect(this.context, rect.x + inset, bossBarY, rect.width - inset * 2, bossBarHeight, bossBarHeight / 2)
       this.context.fill()
 
       this.context.fillStyle = '#FFFFFF'
-      roundRect(this.context, rect.x + 9, rect.y + rect.height * 0.5 + 2, Math.max(4, (rect.width - 18) * healthRatio), 3, 2)
+      roundRect(
+        this.context,
+        rect.x + inset + 2,
+        bossBarY + 2,
+        Math.max(4, (rect.width - inset * 2 - 4) * healthRatio),
+        Math.max(2, bossBarHeight - 4),
+        2,
+      )
       this.context.fill()
 
       this.context.fillStyle = 'rgba(255, 255, 255, 0.9)'
-      this.context.font = '800 9px system-ui, sans-serif'
+      this.context.font = `800 ${bossTextSize}px system-ui, sans-serif`
       this.context.textAlign = 'center'
       this.context.textBaseline = 'middle'
       this.context.fillText(`${brick.health}/${brick.maxHealth}`, rect.x + rect.width / 2, rect.y + rect.height * 0.32)
     } else if (brick.kind === 'reinforced') {
+      const healthBarWidth = Math.max(4, (rect.width - inset * 2) * Math.max(0.16, healthRatio))
+
       this.context.fillStyle = `rgba(255, 255, 255, ${0.12 + (1 - healthRatio) * 0.18})`
       roundRect(
         this.context,
-        rect.x + 7,
-        rect.y + rect.height * 0.56,
-        rect.width * Math.max(0.16, healthRatio) - 14,
-        4,
+        rect.x + inset,
+        rect.y + rect.height * 0.58,
+        healthBarWidth,
+        Math.max(3, rect.height * 0.2),
         3,
       )
       this.context.fill()
@@ -145,12 +159,12 @@ export class Renderer {
 
     if (brick.kind === 'steel') {
       this.context.fillStyle = 'rgba(255, 255, 255, 0.2)'
-      this.context.fillRect(rect.x + 8, rect.y + 7, rect.width - 16, 2)
+      this.context.fillRect(rect.x + inset, rect.y + Math.max(4, rect.height * 0.34), rect.width - inset * 2, 2)
     }
 
     if (brick.kind === 'explosive') {
       this.context.fillStyle = 'rgba(255, 255, 255, 0.82)'
-      this.context.font = '700 12px system-ui, sans-serif'
+      this.context.font = `700 ${Math.max(10, Math.min(12, rect.height * 0.72))}px system-ui, sans-serif`
       this.context.textAlign = 'center'
       this.context.textBaseline = 'middle'
       this.context.fillText('×', rect.x + rect.width / 2, rect.y + rect.height / 2)

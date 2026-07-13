@@ -433,7 +433,7 @@ export class Game {
           this.shake = Math.max(this.shake, brick.kind === 'steel' ? 5 : 2)
         }
 
-        return
+        break
       }
     }
   }
@@ -677,7 +677,21 @@ export class Game {
     this.targetPaddleX = clamp(this.targetPaddleX, this.paddle.width / 2, this.boardWidth - this.paddle.width / 2)
 
     if (this.bricks.length > 0) {
-      this.bricks = createLevelBricks(this.levelIndex, this.boardWidth)
+      const resizedBricks = createLevelBricks(this.levelIndex, this.boardWidth)
+
+      resizedBricks.forEach((resizedBrick, brickIndex) => {
+        const previousBrick = this.bricks[brickIndex]
+
+        if (!previousBrick || previousBrick.kind !== resizedBrick.kind) {
+          return
+        }
+
+        resizedBrick.alive = previousBrick.alive
+        resizedBrick.health = Math.min(previousBrick.health, resizedBrick.maxHealth)
+        resizedBrick.flash = previousBrick.flash
+      })
+
+      this.bricks = resizedBricks
     }
   }
 
