@@ -1,0 +1,87 @@
+import './style.css'
+import { Game } from './game'
+
+const app = document.querySelector<HTMLDivElement>('#app')
+
+if (!app) {
+  throw new Error('App root element is missing')
+}
+
+app.innerHTML = `
+  <main class="game-shell" aria-label="Neon Breakout 2D">
+    <canvas class="game-canvas" data-game-canvas aria-label="弹球打砖块游戏画布"></canvas>
+
+    <section class="top-hud" aria-label="游戏状态">
+      <div class="hud-item">
+        <span>Score</span>
+        <strong data-hud="score">0</strong>
+      </div>
+      <div class="hud-item">
+        <span>Best</span>
+        <strong data-hud="best">0</strong>
+      </div>
+      <div class="hud-item">
+        <span>Level</span>
+        <strong data-hud="level">1</strong>
+      </div>
+      <div class="hud-item">
+        <span>Lives</span>
+        <strong data-hud="lives">3</strong>
+      </div>
+      <button class="icon-button" data-action="pause" type="button">Pause</button>
+    </section>
+
+    <section class="powerup-bar" aria-label="当前道具">
+      <span data-powerup="multiball">Multi</span>
+      <span data-powerup="wide">Wide</span>
+      <span data-powerup="fireball">Fire</span>
+      <span data-powerup="shield">Shield</span>
+    </section>
+
+    <div class="toast" data-hud="toast" role="status" aria-live="polite"></div>
+
+    <section class="screen-overlay is-visible" data-screen="start">
+      <div class="screen-card">
+        <p class="eyebrow">Free · Static · EdgeOne Ready</p>
+        <h1>Neon Breakout 2D</h1>
+        <p class="screen-copy">
+          纯前端 Canvas 弹球打砖块：连击、道具、爆炸砖块、护盾和合成音效。
+        </p>
+        <button class="primary-button" data-action="start" type="button">开始游戏</button>
+        <div class="control-hints">
+          <span>鼠标 / 触屏移动挡板</span>
+          <span>← → 键控制</span>
+          <span>Space 发球 / 继续</span>
+          <span>P 暂停</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen-overlay" data-screen="pause">
+      <div class="screen-card compact">
+        <p class="eyebrow">Paused</p>
+        <h2>游戏暂停</h2>
+        <button class="primary-button" data-action="resume" type="button">继续</button>
+        <button class="secondary-button" data-action="restart" type="button">重新开始</button>
+      </div>
+    </section>
+
+    <section class="screen-overlay" data-screen="result">
+      <div class="screen-card compact">
+        <p class="eyebrow" data-result="label">Game Over</p>
+        <h2 data-result="title">再来一局</h2>
+        <p class="screen-copy" data-result="summary">得分 0</p>
+        <button class="primary-button" data-action="restart" type="button">重新开始</button>
+      </div>
+    </section>
+  </main>
+`
+
+const canvas = document.querySelector<HTMLCanvasElement>('[data-game-canvas]')
+
+if (!canvas) {
+  throw new Error('Game canvas element is missing')
+}
+
+const game = new Game(canvas)
+game.start()
