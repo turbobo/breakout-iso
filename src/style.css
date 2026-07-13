@@ -238,6 +238,24 @@ button {
   transition: opacity 220ms ease;
 }
 
+/* PC端：缩小遮罩范围，保留游戏画面可见 */
+@media (min-width: 721px) {
+  .screen-overlay {
+    /* 移除全屏覆盖，只在卡片周围显示小范围模糊背景 */
+    background:
+      radial-gradient(circle at 50% 40%, rgba(124, 219, 255, 0.08), transparent 45%),
+      rgba(4, 5, 16, 0.35);
+    backdrop-filter: blur(4px);
+  }
+  
+  /* 确保卡片本身不受影响 */
+  .screen-overlay .screen-card {
+    box-shadow:
+      0 24px 80px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+}
+
 .screen-overlay.is-visible {
   opacity: 1;
   pointer-events: auto;
