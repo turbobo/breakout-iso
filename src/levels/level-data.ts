@@ -82,7 +82,7 @@ export function createLevelBricks(levelIndex: number, boardWidth: number): Brick
   const gridWidth = Math.max(280, Math.min(availableGridWidth, maxGridWidth))
   const brickWidth = (gridWidth - brickGap * (columns - 1)) / columns
   const brickHeight = clampLayoutValue(boardWidth * 0.045, 17, 24)
-  const topOffset = boardWidth < 720 ? 138 : 106
+  const topOffset = boardWidth < 720 ? 214 : 106
   const startX = (boardWidth - gridWidth) / 2
   const bricks: Brick[] = []
 
