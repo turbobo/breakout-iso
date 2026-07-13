@@ -26,6 +26,7 @@ import {
 import { HudController } from './ui/hud'
 
 type GamePhase = 'start' | 'playing' | 'transition' | 'paused' | 'result'
+type HudScreen = 'start' | 'transition' | 'pause' | 'result' | 'none'
 
 const gameConfig = {
   initialBallSpeed: 430,
@@ -111,7 +112,7 @@ export class Game {
     this.resize()
     this.resetRun()
     this.renderLevelSelect()
-    this.hud.showScreen('start')
+    this.setPhase('start')
     this.updateHud()
   }
 
@@ -257,13 +258,29 @@ export class Game {
     this.hud.renderLevelSelect(getLevelSummaries(), this.selectedLevelIndex, (levelIndex) => this.selectLevel(levelIndex))
   }
 
+  private setPhase(nextPhase: GamePhase): void {
+    this.phase = nextPhase
+    this.hud.showScreen(this.getHudScreen(nextPhase))
+  }
+
+  private getHudScreen(phase: GamePhase): HudScreen {
+    if (phase === 'start' || phase === 'transition' || phase === 'result') {
+      return phase
+    }
+
+    if (phase === 'paused') {
+      return 'pause'
+    }
+
+    return 'none'
+  }
+
   private selectLevel(levelIndex: number): void {
     this.selectedLevelIndex = clamp(levelIndex, 0, getLevelCount() - 1)
     this.levelIndex = this.selectedLevelIndex
     this.resetRun()
     this.renderLevelSelect()
-    this.phase = 'start'
-    this.hud.showScreen('start')
+    this.setPhase('start')
     this.updateHud()
   }
 
@@ -368,8 +385,7 @@ export class Game {
       this.resetRun()
     }
 
-    this.phase = 'playing'
-    this.hud.showScreen('none')
+    this.setPhase('playing')
     this.resumeAudio()
   }
 
@@ -386,8 +402,7 @@ export class Game {
 
     this.loadLevel(this.levelIndex)
     this.renderLevelSelect()
-    this.phase = 'playing'
-    this.hud.showScreen('none')
+    this.setPhase('playing')
     this.resumeAudio()
     this.updateHud()
   }
@@ -398,20 +413,17 @@ export class Game {
     }
 
     if (this.phase === 'paused') {
-      this.phase = 'playing'
-      this.hud.showScreen('none')
+      this.setPhase('playing')
       return
     }
 
-    this.phase = 'paused'
-    this.hud.showScreen('pause')
+    this.setPhase('paused')
   }
 
   private restart(): void {
     this.levelIndex = this.selectedLevelIndex
     this.resetRun()
-    this.phase = 'playing'
-    this.hud.showScreen('none')
+    this.setPhase('playing')
     this.hud.showToast('新的挑战开始')
   }
 
@@ -420,8 +432,7 @@ export class Game {
     this.levelIndex = this.selectedLevelIndex
     this.resetRun()
     this.renderLevelSelect()
-    this.phase = 'start'
-    this.hud.showScreen('start')
+    this.setPhase('start')
     this.updateHud()
   }
 
@@ -767,8 +778,7 @@ export class Game {
     }
 
     this.spawnPrimaryBall()
-    this.phase = 'paused'
-    this.hud.showScreen('pause')
+    this.setPhase('paused')
     this.hud.showToast('失去一次机会')
   }
 
@@ -797,7 +807,6 @@ export class Game {
 
     this.levelIndex = nextLevelIndex
     this.selectedLevelIndex = nextLevelIndex
-    this.phase = 'transition'
     this.audio.play('win', 0.68)
     this.renderLevelSelect()
 
@@ -812,10 +821,10 @@ export class Game {
       nextChanceCount: getLevelChanceCount(nextLevelIndex),
       bonusScore,
     })
+    this.setPhase('transition')
   }
 
   private finish(won: boolean): void {
-    this.phase = 'result'
     saveBestScore(this.score)
     this.bestScore = readBestScore()
     this.audio.play(won ? 'win' : 'lose')
@@ -829,6 +838,7 @@ export class Game {
       mode: this.getLevelModeLabel(resultLevelIndex),
       combo: this.maxCombo,
     })
+    this.setPhase('result')
   }
 
   private resize(): void {

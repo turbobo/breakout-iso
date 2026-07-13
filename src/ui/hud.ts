@@ -124,7 +124,6 @@ export class HudController {
     this.transitionTitle.textContent = `确认进入第 ${state.nextLevel} 关？`
     this.transitionSummary.textContent = `下一关：${state.nextName} · ${formatModeLabel(state.nextMode)}模式 · ${state.nextDescription}`
     this.transitionStats.textContent = `奖励 +${state.bonusScore} · 第 ${state.nextLevel} 关 · ${state.nextChanceCount} 次机会`
-    this.showScreen('transition')
   }
 
   public showResult(state: ResultState): void {
@@ -132,7 +131,6 @@ export class HudController {
     this.resultLabel.textContent = state.won ? '胜利' : '游戏结束'
     this.resultTitle.textContent = state.won ? '通关成功' : '再来一局'
     this.resultSummary.textContent = `得分 ${state.score} · 最高分 ${state.bestScore} · 到达第 ${state.level} 关 · ${state.mode} · 最大连击 x${Math.max(1, state.combo)}`
-    this.showScreen('result')
   }
 
   private setScreenVisibility(screen: HTMLElement, visible: boolean): void {

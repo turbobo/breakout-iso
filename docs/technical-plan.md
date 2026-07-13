@@ -204,9 +204,10 @@ angle = -90° + hitRatio * 约 52°
 ## 10. UI 与 HUD
 
 - `src/main.ts` 定义 HUD、开始页、下一关过渡页、暂停页、结算页和关卡选择容器。
-- `src/ui/hud.ts` 负责更新分数、最高分、关卡、模式、计时、机会和道具状态。
+- `src/ui/hud.ts` 负责更新分数、最高分、关卡、模式、计时、机会、道具状态，以及覆盖层显隐、焦点和可访问性属性。
+- `src/game.ts` 通过 `Game.setPhase()` 统一维护游戏阶段，并集中映射 HUD 屏幕，避免开始、暂停、过渡和结算流程分散调用 `showScreen()`。
 - `HudController.renderLevelSelect()` 根据关卡摘要动态生成按钮式关卡卡片。
-- `HudController.showLevelTransition()` 渲染下一关名称、模式、描述、奖励分数和机会数。
+- `HudController.showLevelTransition()` 和 `HudController.showResult()` 只渲染内容，实际切屏由 `Game.setPhase()` 统一触发，确保 phase、覆盖层和焦点状态一致。
 - 开始、过渡、暂停和结算覆盖层使用 `dialog` 语义、`aria-modal` 和标题关联，隐藏时同步 `aria-hidden` 与 `inert`，避免不可见控件进入 Tab 顺序。
 - 屏幕切换后焦点自动落到当前覆盖层主按钮；回到游戏时焦点返回 Canvas，保证键盘用户能继续用空格、方向键和快捷键操作。
 - 按钮和关卡卡片提供 `:focus-visible` 高对比焦点样式。
