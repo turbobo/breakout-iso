@@ -25,6 +25,14 @@ app.innerHTML = `
         <strong data-hud="level">1</strong>
       </div>
       <div class="hud-item">
+        <span>Mode</span>
+        <strong data-hud="mode">Classic</strong>
+      </div>
+      <div class="hud-item">
+        <span>Time</span>
+        <strong data-hud="timer">∞</strong>
+      </div>
+      <div class="hud-item">
         <span>Lives</span>
         <strong data-hud="lives">3</strong>
       </div>
@@ -49,9 +57,16 @@ app.innerHTML = `
         <p class="eyebrow">Free · Static · EdgeOne Ready</p>
         <h1>Neon Breakout 2D</h1>
         <p class="screen-copy">
-          纯前端 Canvas 弹球打砖块：连击、道具、爆炸砖块、护盾和合成音效。
+          纯前端 Canvas 弹球打砖块：16 个关卡、Classic / Timed / Boss 模式、连击、道具、爆炸砖块和护盾。
         </p>
         <button class="primary-button" data-action="start" type="button">开始游戏</button>
+        <div class="level-select" aria-label="选择关卡">
+          <div class="level-select-header">
+            <strong>选择关卡</strong>
+            <span>Classic · Timed · Boss</span>
+          </div>
+          <div class="level-grid" data-level-list></div>
+        </div>
         <div class="control-hints">
           <span>手机端拖动任意空白区域</span>
           <span>桌面端鼠标 / ← → 键</span>
@@ -67,6 +82,7 @@ app.innerHTML = `
         <h2>游戏暂停</h2>
         <button class="primary-button" data-action="resume" type="button">继续</button>
         <button class="secondary-button" data-action="restart" type="button">重新开始</button>
+        <button class="secondary-button" data-action="menu" type="button">选择关卡</button>
       </div>
     </section>
 
@@ -76,6 +92,7 @@ app.innerHTML = `
         <h2 data-result="title">再来一局</h2>
         <p class="screen-copy" data-result="summary">得分 0</p>
         <button class="primary-button" data-action="restart" type="button">重新开始</button>
+        <button class="secondary-button" data-action="menu" type="button">选择关卡</button>
       </div>
     </section>
   </main>

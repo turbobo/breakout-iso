@@ -13,7 +13,14 @@ import {
 import { ParticleSystem } from './engine/particles'
 import { Renderer } from './engine/renderer'
 import { readBestScore, saveBestScore } from './engine/storage'
-import { createLevelBricks, getLevelCount, getLevelName } from './levels/level-data'
+import {
+  createLevelBricks,
+  getLevelCount,
+  getLevelDefinition,
+  getLevelName,
+  getLevelPowerUpDropRate,
+  getLevelSummaries,
+} from './levels/level-data'
 import { HudController } from './ui/hud'
 
 type GamePhase = 'start' | 'playing' | 'paused' | 'result'
@@ -53,6 +60,9 @@ export class Game {
   private activePointerId: number | null = null
   private pointerStartClientX = 0
   private pointerStartTargetX = 0
+  private selectedLevelIndex = 0
+  private levelTimeRemainingSeconds: number | null = null
+  private bossSkillCooldownSeconds = 0
 
   public constructor(canvas: HTMLCanvasElement) {
     const context = canvas.getContext('2d')
@@ -67,6 +77,7 @@ export class Game {
     this.registerEvents()
     this.resize()
     this.resetRun()
+    this.renderLevelSelect()
     this.hud.showScreen('start')
     this.updateHud()
   }
@@ -89,6 +100,13 @@ export class Game {
   }
 
   private update(deltaSeconds: number): void {
+    this.updateLevelRules(deltaSeconds)
+
+    if (this.phase !== 'playing') {
+      this.updateHud()
+      return
+    }
+
     this.updateKeyboardPaddle(deltaSeconds)
     this.paddle.update(deltaSeconds, this.targetPaddleX, this.boardWidth)
     this.balls.forEach((ball) => ball.update(deltaSeconds))
@@ -133,7 +151,24 @@ export class Game {
     document.querySelectorAll<HTMLElement>('[data-action="restart"]').forEach((button) => {
       button.addEventListener('click', () => this.restart())
     })
+    document.querySelectorAll<HTMLElement>('[data-action="menu"]').forEach((button) => {
+      button.addEventListener('click', () => this.returnToMenu())
+    })
     document.querySelector<HTMLElement>('[data-action="pause"]')?.addEventListener('click', () => this.togglePause())
+  }
+
+  private renderLevelSelect(): void {
+    this.hud.renderLevelSelect(getLevelSummaries(), this.selectedLevelIndex, (levelIndex) => this.selectLevel(levelIndex))
+  }
+
+  private selectLevel(levelIndex: number): void {
+    this.selectedLevelIndex = clamp(levelIndex, 0, getLevelCount() - 1)
+    this.levelIndex = this.selectedLevelIndex
+    this.resetRun()
+    this.renderLevelSelect()
+    this.phase = 'start'
+    this.hud.showScreen('start')
+    this.updateHud()
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
@@ -227,6 +262,11 @@ export class Game {
       return
     }
 
+    if (this.phase === 'start') {
+      this.levelIndex = this.selectedLevelIndex
+      this.resetRun()
+    }
+
     this.phase = 'playing'
     this.hud.showScreen('none')
     void this.audio.resume()
@@ -248,11 +288,21 @@ export class Game {
   }
 
   private restart(): void {
-    this.levelIndex = 0
+    this.levelIndex = this.selectedLevelIndex
     this.resetRun()
     this.phase = 'playing'
     this.hud.showScreen('none')
     this.hud.showToast('New Run')
+  }
+
+  private returnToMenu(): void {
+    this.selectedLevelIndex = clamp(this.levelIndex, 0, getLevelCount() - 1)
+    this.levelIndex = this.selectedLevelIndex
+    this.resetRun()
+    this.renderLevelSelect()
+    this.phase = 'start'
+    this.hud.showScreen('start')
+    this.updateHud()
   }
 
   private resetRun(): void {
@@ -266,19 +316,25 @@ export class Game {
   }
 
   private loadLevel(levelIndex: number): void {
+    const levelDefinition = getLevelDefinition(levelIndex)
+
     this.bricks = createLevelBricks(levelIndex, this.boardWidth)
     this.powerUps = []
+    this.levelTimeRemainingSeconds = levelDefinition.timeLimitSeconds ?? null
+    this.bossSkillCooldownSeconds = levelDefinition.bossSkillIntervalSeconds ?? 0
     this.paddle = new Paddle({ x: this.boardWidth / 2, y: this.getPaddleY() })
     this.targetPaddleX = this.paddle.position.x
     this.spawnPrimaryBall()
-    this.hud.showToast(getLevelName(levelIndex))
+    this.hud.showToast(`${getLevelName(levelIndex)} · ${this.getLevelModeLabel()}`)
   }
 
   private spawnPrimaryBall(): void {
+    const baseBallSpeed = this.getCurrentBaseBallSpeed()
+
     this.balls = [
       new Ball(
         { x: this.paddle.position.x, y: this.paddle.position.y - 36 },
-        { x: initialBallSpeed * 0.42, y: -initialBallSpeed },
+        { x: baseBallSpeed * 0.42, y: -baseBallSpeed },
       ),
     ]
   }
@@ -318,7 +374,7 @@ export class Game {
         -1,
         1,
       )
-      const speed = clamp(getSpeed(ball.velocity), initialBallSpeed, maxBallSpeed)
+      const speed = clamp(getSpeed(ball.velocity), this.getCurrentBaseBallSpeed(), maxBallSpeed)
       const angle = -Math.PI / 2 + hitRatio * 0.92
 
       ball.position.y -= collision.penetration + 1
@@ -374,7 +430,7 @@ export class Game {
       this.explodeAround(brick)
     }
 
-    if (Math.random() < 0.22) {
+    if (Math.random() < getLevelPowerUpDropRate(this.levelIndex)) {
       this.powerUps.push(new PowerUp(pickPowerUp(), brick.center))
     }
 
@@ -385,7 +441,7 @@ export class Game {
 
   private explodeAround(sourceBrick: Brick): void {
     for (const brick of this.bricks) {
-      if (!brick.alive || brick.kind === 'steel') {
+      if (!brick.alive || brick.kind === 'steel' || brick.kind === 'boss') {
         continue
       }
 
@@ -527,15 +583,21 @@ export class Game {
       return
     }
 
-    this.score += this.lives * 1000
+    const timeBonus = this.levelTimeRemainingSeconds === null ? 0 : Math.ceil(this.levelTimeRemainingSeconds) * 20
+    this.score += this.lives * 1000 + timeBonus
+    this.levelTimeRemainingSeconds = null
     this.levelIndex += 1
+    this.selectedLevelIndex = Math.min(this.levelIndex, getLevelCount() - 1)
 
     if (this.levelIndex >= getLevelCount()) {
+      this.levelIndex = getLevelCount() - 1
+      this.selectedLevelIndex = this.levelIndex
       this.finish(true)
       return
     }
 
     this.loadLevel(this.levelIndex)
+    this.renderLevelSelect()
   }
 
   private finish(won: boolean): void {
@@ -543,11 +605,14 @@ export class Game {
     saveBestScore(this.score)
     this.bestScore = readBestScore()
     this.audio.play(won ? 'win' : 'lose')
+    const resultLevelIndex = Math.min(this.levelIndex, getLevelCount() - 1)
+
     this.hud.showResult({
       won,
       score: this.score,
       bestScore: this.bestScore,
-      level: this.levelIndex + 1,
+      level: resultLevelIndex + 1,
+      mode: this.getLevelModeLabel(resultLevelIndex),
       combo: this.maxCombo,
     })
   }
@@ -571,24 +636,101 @@ export class Game {
   }
 
   private getPlayBottomY(): number {
-    const mobileBottomDockHeight = this.boardWidth < 720 ? 126 : 0
+    const mobileBottomDockHeight = this.boardWidth < 720 ? 184 : 0
     return this.boardHeight - mobileBottomDockHeight
   }
 
   private getPaddleY(): number {
-    const mobileControlDockHeight = this.boardWidth < 720 ? 172 : 68
+    const mobileControlDockHeight = this.boardWidth < 720 ? 228 : 68
     return this.boardHeight - mobileControlDockHeight
   }
 
   private updateHud(): void {
     this.bestScore = Math.max(this.bestScore, this.score)
+    const displayLevelIndex = Math.min(this.levelIndex, getLevelCount() - 1)
+
     this.hud.update({
       score: this.score,
       bestScore: this.bestScore,
-      level: this.levelIndex + 1,
+      levelLabel: `${displayLevelIndex + 1}/${getLevelCount()}`,
       lives: this.lives,
+      mode: this.getLevelModeLabel(displayLevelIndex),
+      timerText: this.getTimerText(),
       activePowerUps: this.getActivePowerUps(),
     })
+  }
+
+  private updateLevelRules(deltaSeconds: number): void {
+    const levelDefinition = getLevelDefinition(this.levelIndex)
+
+    if (this.levelTimeRemainingSeconds !== null) {
+      this.levelTimeRemainingSeconds = Math.max(0, this.levelTimeRemainingSeconds - deltaSeconds)
+
+      if (this.levelTimeRemainingSeconds <= 0) {
+        this.hud.showToast('Time Up')
+        this.finish(false)
+        return
+      }
+    }
+
+    if (levelDefinition.mode !== 'boss' || !this.hasActiveBossBrick()) {
+      return
+    }
+
+    this.bossSkillCooldownSeconds -= deltaSeconds
+
+    if (this.bossSkillCooldownSeconds > 0) {
+      return
+    }
+
+    this.triggerBossSkill()
+    this.bossSkillCooldownSeconds = levelDefinition.bossSkillIntervalSeconds ?? 8
+  }
+
+  private triggerBossSkill(): void {
+    const targetSpeedMultiplier = 1.08
+
+    this.balls.forEach((ball) => {
+      const nextSpeed = Math.min(maxBallSpeed, getSpeed(ball.velocity) * targetSpeedMultiplier)
+      ball.velocity = scaleToLength(ball.velocity, nextSpeed)
+    })
+    this.shake = Math.max(this.shake, 10)
+    this.audio.play('explosion', 0.72)
+    this.hud.showToast('Boss Pulse')
+  }
+
+  private hasActiveBossBrick(): boolean {
+    return this.bricks.some((brick) => brick.alive && brick.kind === 'boss')
+  }
+
+  private getCurrentBaseBallSpeed(): number {
+    return Math.min(maxBallSpeed, initialBallSpeed * (getLevelDefinition(this.levelIndex).ballSpeedMultiplier ?? 1))
+  }
+
+  private getLevelModeLabel(levelIndex = this.levelIndex): string {
+    const mode = getLevelDefinition(levelIndex).mode
+
+    if (mode === 'timed') {
+      return 'Timed'
+    }
+
+    if (mode === 'boss') {
+      return 'Boss'
+    }
+
+    return 'Classic'
+  }
+
+  private getTimerText(): string {
+    if (this.levelTimeRemainingSeconds !== null) {
+      return `${Math.ceil(this.levelTimeRemainingSeconds)}s`
+    }
+
+    if (getLevelDefinition(this.levelIndex).mode === 'boss') {
+      return `${Math.ceil(this.bossSkillCooldownSeconds)}s`
+    }
+
+    return '∞'
   }
 
   private getActivePowerUps(): Set<string> {

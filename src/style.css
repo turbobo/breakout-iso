@@ -54,7 +54,8 @@ button {
 .top-hud,
 .powerup-bar,
 .touch-guide,
-.screen-card {
+.screen-card,
+.level-card {
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(8, 10, 31, 0.52);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
@@ -67,10 +68,10 @@ button {
   left: 50%;
   z-index: 3;
   display: grid;
-  grid-template-columns: repeat(4, minmax(76px, auto)) auto;
+  grid-template-columns: repeat(6, minmax(76px, auto)) auto;
   gap: 10px;
   align-items: center;
-  width: min(760px, calc(100vw - 24px));
+  width: min(980px, calc(100vw - 24px));
   padding: 10px;
   border-radius: 999px;
   transform: translateX(-50%);
@@ -230,7 +231,7 @@ button {
 }
 
 .screen-card {
-  width: min(560px, calc(100vw - 32px));
+  width: min(760px, calc(100vw - 32px));
   padding: clamp(26px, 5vw, 52px);
   border-radius: 34px;
   text-align: center;
@@ -280,6 +281,79 @@ h2 {
   line-height: 1.7;
 }
 
+.level-select {
+  margin-top: 24px;
+}
+
+.level-select-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+  margin-bottom: 12px;
+  color: rgba(248, 251, 255, 0.84);
+  text-align: left;
+}
+
+.level-select-header strong {
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.level-select-header span {
+  color: rgba(248, 251, 255, 0.5);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.level-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  max-height: min(330px, 36vh);
+  overflow: auto;
+  padding: 2px 4px 2px 2px;
+  scrollbar-color: rgba(124, 219, 255, 0.45) transparent;
+}
+
+.level-card {
+  display: grid;
+  gap: 5px;
+  min-height: 104px;
+  padding: 13px;
+  color: #ffffff;
+  border-radius: 20px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.level-card.is-selected {
+  border-color: rgba(124, 219, 255, 0.78);
+  background: rgba(124, 219, 255, 0.16);
+  box-shadow:
+    0 20px 60px rgba(124, 219, 255, 0.16),
+    inset 0 0 0 1px rgba(124, 219, 255, 0.26);
+}
+
+.level-card-meta {
+  color: #f7c948;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.level-card strong {
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.level-card small {
+  color: rgba(248, 251, 255, 0.62);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .control-hints {
   display: flex;
   flex-wrap: wrap;
@@ -301,7 +375,7 @@ h2 {
   .top-hud {
     top: auto;
     bottom: calc(max(8px, env(safe-area-inset-bottom)) + 58px);
-    grid-template-columns: repeat(4, minmax(0, 1fr)) 44px;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 44px;
     gap: 5px;
     width: calc(100vw - 16px);
     padding: 7px;
@@ -359,7 +433,7 @@ h2 {
 
   .touch-guide {
     right: 50%;
-    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 114px);
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 172px);
     display: block;
     transform: translateX(50%);
   }
