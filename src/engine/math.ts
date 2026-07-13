@@ -20,6 +20,11 @@ export interface CollisionResult {
   penetration: number
 }
 
+export interface SweptCollisionResult {
+  normal: Vector2
+  hitPosition: Vector2
+}
+
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }
@@ -114,4 +119,36 @@ export function resolveCircleRectCollision(circle: Circle, rect: Rect): Collisio
   }
 
   return { normal: { x: 0, y: 1 }, penetration: circle.radius }
+}
+
+export function resolveSweptCircleTopRectCollision(
+  previousPosition: Vector2,
+  currentPosition: Vector2,
+  radius: number,
+  rect: Rect,
+): SweptCollisionResult | null {
+  if (currentPosition.y <= previousPosition.y) {
+    return null
+  }
+
+  const expandedTopY = rect.y - radius
+
+  if (previousPosition.y > expandedTopY || currentPosition.y < expandedTopY) {
+    return null
+  }
+
+  const travelY = currentPosition.y - previousPosition.y
+  const hitProgress = (expandedTopY - previousPosition.y) / travelY
+  const hitX = previousPosition.x + (currentPosition.x - previousPosition.x) * hitProgress
+  const expandedLeftX = rect.x - radius
+  const expandedRightX = rect.x + rect.width + radius
+
+  if (hitX < expandedLeftX || hitX > expandedRightX) {
+    return null
+  }
+
+  return {
+    normal: { x: 0, y: -1 },
+    hitPosition: { x: hitX, y: expandedTopY },
+  }
 }

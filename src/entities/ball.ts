@@ -4,6 +4,7 @@ const trailCapacity = 18
 
 export class Ball {
   public position: Vector2
+  public previousPosition: Vector2
   public velocity: Vector2
   public radius: number
   public active = true
@@ -14,11 +15,14 @@ export class Ball {
 
   public constructor(position: Vector2, velocity: Vector2, radius = 8) {
     this.position = { ...position }
+    this.previousPosition = { ...position }
     this.velocity = { ...velocity }
     this.radius = radius
   }
 
   public update(deltaSeconds: number): void {
+    this.previousPosition.x = this.position.x
+    this.previousPosition.y = this.position.y
     this.position.x += this.velocity.x * deltaSeconds
     this.position.y += this.velocity.y * deltaSeconds
     this.fireballTimer = Math.max(0, this.fireballTimer - deltaSeconds)

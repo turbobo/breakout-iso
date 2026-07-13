@@ -9,6 +9,7 @@ import {
   getSpeed,
   reflectVelocity,
   resolveCircleRectCollision,
+  resolveSweptCircleTopRectCollision,
   scaleToLength,
 } from './engine/math'
 import { ParticleSystem } from './engine/particles'
@@ -501,21 +502,31 @@ export class Game {
 
   private handlePaddleCollisions(): void {
     for (const ball of this.balls) {
-      const collision = resolveCircleRectCollision(ball, this.paddle.rect)
-
-      if (!collision || ball.velocity.y <= 0) {
+      if (ball.velocity.y <= 0) {
         continue
       }
 
+      const paddleRect = this.paddle.rect
+      const collision = resolveCircleRectCollision(ball, paddleRect)
+      const sweptCollision = collision
+        ? null
+        : resolveSweptCircleTopRectCollision(ball.previousPosition, ball.position, ball.radius, paddleRect)
+
+      if (!collision && !sweptCollision) {
+        continue
+      }
+
+      const impactX = sweptCollision?.hitPosition.x ?? ball.position.x
       const hitRatio = clamp(
-        (ball.position.x - this.paddle.position.x) / (this.paddle.width / 2),
+        (impactX - this.paddle.position.x) / (this.paddle.width / 2),
         -1,
         1,
       )
       const speed = clamp(getSpeed(ball.velocity), this.getCurrentBaseBallSpeed(), gameConfig.maxBallSpeed)
       const angle = -Math.PI / 2 + hitRatio * gameConfig.paddleHitAngleRange
 
-      ball.position.y -= collision.penetration + 1
+      ball.position.x = impactX
+      ball.position.y = sweptCollision?.hitPosition.y ?? ball.position.y - collision!.penetration - 1
       ball.velocity.x = Math.cos(angle) * speed
       ball.velocity.y = Math.sin(angle) * speed
       this.audio.play('paddle')

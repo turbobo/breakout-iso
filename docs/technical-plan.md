@@ -191,11 +191,11 @@ v' = v - 2 * dot(v, n) * n
 球撞击挡板的位置决定反弹角：
 
 ```text
-hitRatio = (ball.x - paddle.x) / (paddle.width / 2)
+hitRatio = (impactX - paddle.x) / (paddle.width / 2)
 angle = -90° + hitRatio * 约 52°
 ```
 
-这样左侧偏左、右侧偏右、中间接近垂直。
+这样左侧偏左、右侧偏右、中间接近垂直。`Ball.update()` 会记录 `previousPosition`，挡板碰撞优先使用当前帧圆形/矩形重叠检测；若高速球在单帧内从挡板上方移动到挡板下方，则通过 `resolveSweptCircleTopRectCollision()` 检测运动线段是否穿过挡板顶部扩展面，命中后把球放回撞击点并按 `impactX` 计算反弹角，避免掉帧或高速状态下偶发穿板。
 
 ### 9.4 多球碰撞策略
 
@@ -265,6 +265,7 @@ value: number string
 - `npm run build` 执行 TypeScript 类型检查并生成生产构建。
 - `npm run test` 使用 Vitest 覆盖核心数学工具和砖块实体规则，作为后续碰撞、边界和类型守卫改动的回归基线。
 - 挡板边界统一通过 `clampPaddleCenterX()` 约束，测试覆盖普通边界和棋盘窄于挡板的兜底场景。
+- 挡板扫掠碰撞通过 `resolveSweptCircleTopRectCollision()` 覆盖高速球跨帧穿过挡板顶部的回归场景，并验证横向错过时不会误判。
 - 砖块类型判断统一提供 `isSteelBrick()`、`isBossBrick()` 和 `isDestructibleBrick()` 类型守卫，测试覆盖钢铁、首领和普通砖块行为。
 
 ## 16. 后续扩展

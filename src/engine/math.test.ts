@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { clamp, clampPaddleCenterX, reflectVelocity, resolveCircleRectCollision } from './math'
+import {
+  clamp,
+  clampPaddleCenterX,
+  reflectVelocity,
+  resolveCircleRectCollision,
+  resolveSweptCircleTopRectCollision,
+} from './math'
 
 describe('math helpers', () => {
   it('clamps generic values to the inclusive range', () => {
@@ -32,5 +38,29 @@ describe('math helpers', () => {
     expect(collision).not.toBeNull()
     expect(collision?.normal.y).toBeLessThan(0)
     expect(collision?.penetration).toBeGreaterThan(0)
+  })
+
+  it('detects a fast ball crossing the top of a paddle between frames', () => {
+    const collision = resolveSweptCircleTopRectCollision(
+      { x: 70, y: 80 },
+      { x: 72, y: 124 },
+      8,
+      { x: 40, y: 110, width: 80, height: 18 },
+    )
+
+    expect(collision).not.toBeNull()
+    expect(collision?.normal).toEqual({ x: 0, y: -1 })
+    expect(collision?.hitPosition).toEqual({ x: 71, y: 102 })
+  })
+
+  it('ignores swept paddle collision when the crossing misses horizontally', () => {
+    const collision = resolveSweptCircleTopRectCollision(
+      { x: 20, y: 80 },
+      { x: 24, y: 124 },
+      8,
+      { x: 40, y: 110, width: 80, height: 18 },
+    )
+
+    expect(collision).toBeNull()
   })
 })
