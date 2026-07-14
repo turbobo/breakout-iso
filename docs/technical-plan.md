@@ -212,9 +212,10 @@ angle = -90° + hitRatio * 约 52°
 - `src/game.ts` 通过 `Game.setPhase()` 统一维护游戏阶段，并集中映射 HUD 屏幕，避免开始、暂停、过渡和结算流程分散调用 `showScreen()`。
 - `HudController.renderLevelSelect()` 根据关卡摘要动态生成按钮式关卡卡片。
 - `HudController.showLevelTransition()` 和 `HudController.showResult()` 只渲染内容，实际切屏由 `Game.setPhase()` 统一触发，确保 phase、覆盖层和焦点状态一致。
-- PC 端 HUD 布局：分数、关卡、模式、计时、机会和暂停按钮以底部横向面板形式居中显示（`bottom: 16px`, `left: 50%`, `max-width: 960px`），道具栏独立放在分数菜单上方（`bottom: 82px`），形成底部双层布局，避免两个菜单重叠；两层均参考移动端胶囊风格；砖块布局使用全画布宽度，通过 `desktopBottomDockHeight: 144` 和 `desktopControlDockHeight: 144` 预留底部空间，确保挡板和弹球不会进入 HUD 区域。
+- PC 端 HUD 布局：分数、关卡、模式、计时、机会和暂停按钮以底部横向面板形式居中显示（`bottom: 16px`, `left: 50%`, `max-width: 960px`），道具栏独立放在分数菜单上方（`bottom: 82px`），形成底部双层布局，避免两个菜单重叠；两层均参考移动端胶囊风格；HUD 数字值统一使用单行省略策略避免大分数溢出；砖块布局使用全画布宽度，通过 `desktopBottomDockHeight: 144` 和 `desktopControlDockHeight: 144` 预留底部空间，确保挡板和弹球不会进入 HUD 区域。
 - 移动端自适应布局：`Game` 在 `resize()` 中基于 `visualViewport` 计算统一响应式布局，集中给出底部菜单预留区、可玩底线、挡板 Y 坐标、挡板宽度、护盾宽度、砖块顶部偏移和砖块网格宽高约束。砖块布局通过 `createLevelBricks()` 的布局参数同时考虑屏幕宽度、行列数和底部控制区，确保 320px 窄屏和短横屏下砖块不会溢出或压到挡板区域。
-- 移动端 HUD 布局：分数菜单通过 CSS 变量贴近安全区底部（`--mobile-safe-bottom`），道具栏通过 `--mobile-hud-height`、`--mobile-powerup-height` 和 `--mobile-hud-gap` 自动固定在分数菜单上方，避免继续依赖固定 `120px` 偏移；≤360px 设备进一步压缩字号、间距和按钮宽度，横屏短屏切换为单行紧凑 HUD 并隐藏触控提示。
+- 移动端 HUD 布局：分数菜单通过 CSS 变量贴近安全区底部（`--mobile-safe-bottom`），道具栏通过 `--mobile-hud-height`、`--mobile-powerup-height` 和 `--mobile-hud-gap` 自动固定在分数菜单上方，避免继续依赖固定 `120px` 偏移；≤360px 设备进一步压缩字号、间距、标题字号和按钮宽度，横屏短屏切换为单行紧凑 HUD 并隐藏触控提示。
+- 覆盖层兼容策略：开始、过渡、暂停和结算卡片统一限制 `max-height` 并启用内部滚动，避免 PC 短屏和移动横屏下按钮被裁切；首页标题保持单行并限制最大宽度，`h2`、说明文案、过渡统计和关卡卡片长文本启用换行策略，避免窄屏内容溢出。
 - 移动端挡板与护盾适配：挡板基础宽度通过 `getResponsiveSegmentWidth()` 按屏宽缩放到约 30%，并限制在 88～112px；短横屏改用更短比例和 76～104px 限制。护盾在移动端居中缩短为约 62% 屏宽，短横屏进一步缩短为约 48% 屏宽，视觉长度和实际拦截范围一致，避免小屏下挡板和护盾过长。
 - 开始、过渡、暂停和结算覆盖层使用 `dialog` 语义、`aria-modal` 和标题关联，隐藏时同步 `aria-hidden` 与 `inert`，避免不可见控件进入 Tab 顺序。
 - 屏幕切换后焦点自动落到当前覆盖层主按钮；回到游戏时焦点返回 Canvas，保证键盘用户能继续用空格、方向键和快捷键操作。

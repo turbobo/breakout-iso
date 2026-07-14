@@ -99,9 +99,12 @@ button {
 
 .hud-item strong {
   display: block;
+  overflow: hidden;
   color: #ffffff;
   font-size: 17px;
   line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .icon-button,
@@ -275,9 +278,13 @@ button {
 
 .screen-card {
   width: min(760px, calc(100vw - 32px));
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  overscroll-behavior: contain;
   padding: clamp(26px, 5vw, 52px);
   border-radius: 34px;
   text-align: center;
+  scrollbar-color: rgba(124, 219, 255, 0.45) transparent;
   transform: translateY(16px) scale(0.98);
   transition: transform 260ms ease;
 }
@@ -327,8 +334,10 @@ button {
   color: #07101f;
   border-radius: 999px;
   background: linear-gradient(135deg, #f7c948, #7cdbff);
+  overflow-wrap: anywhere;
   font-size: 13px;
   font-weight: 900;
+  text-align: center;
   box-shadow: 0 18px 42px rgba(124, 219, 255, 0.18);
 }
 
@@ -354,13 +363,17 @@ h1 {
 }
 
 #start-title {
+  max-width: 100%;
+  overflow: hidden;
   white-space: nowrap;
-  font-size: clamp(37px, 11.5vw, 88px);
+  font-size: clamp(36px, 10.8vw, 88px);
   line-height: 0.95;
   letter-spacing: -0.08em;
+  text-overflow: clip;
 }
 
 h2 {
+  overflow-wrap: anywhere;
   font-size: clamp(34px, 5vw, 58px);
   line-height: 0.96;
 }
@@ -369,6 +382,7 @@ h2 {
   max-width: 34rem;
   margin: 22px auto 24px;
   color: rgba(248, 251, 255, 0.74);
+  overflow-wrap: anywhere;
   font-size: 16px;
   line-height: 1.7;
 }
@@ -429,6 +443,7 @@ h2 {
 
 .level-card-meta {
   color: #f7c948;
+  overflow-wrap: anywhere;
   font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.12em;
@@ -436,12 +451,14 @@ h2 {
 }
 
 .level-card strong {
+  overflow-wrap: anywhere;
   font-size: 15px;
   line-height: 1.2;
 }
 
 .level-card small {
   color: rgba(248, 251, 255, 0.62);
+  overflow-wrap: anywhere;
   font-size: 12px;
   line-height: 1.45;
 }
@@ -571,7 +588,7 @@ h2 {
   }
 
   #start-title {
-    font-size: clamp(37px, 11.5vw, 58px);
+    font-size: clamp(32px, 10vw, 58px);
   }
 
   h2 {
