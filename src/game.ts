@@ -1182,7 +1182,15 @@ export class Game {
     const shieldStartX = shieldCenterX - shieldHalfWidth
     const shieldEndX = shieldCenterX + shieldHalfWidth
 
-    return ball.position.x + ball.radius >= shieldStartX && ball.position.x - ball.radius <= shieldEndX
+    const shieldY = this.getPlayBottomY()
+    const shieldToleranceY = 40
+    const isWithinShieldY = Math.abs(ball.position.y - shieldY) <= shieldToleranceY
+
+    return (
+      isWithinShieldY &&
+      ball.position.x + ball.radius >= shieldStartX &&
+      ball.position.x - ball.radius <= shieldEndX
+    )
   }
 
   private stabilizeBallVelocity(
