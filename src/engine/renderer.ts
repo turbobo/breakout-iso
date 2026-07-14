@@ -229,10 +229,10 @@ export class Renderer {
     }
 
     const lineY = shieldY - 18
-    const shieldHalfWidth = Math.min(shieldWidth, width - 32) / 2
+    const shieldHalfWidth = Math.min(shieldWidth, width) / 2
     const shieldCenterX = width / 2
-    const shieldStartX = Math.max(16, shieldCenterX - shieldHalfWidth)
-    const shieldEndX = Math.min(width - 16, shieldCenterX + shieldHalfWidth)
+    const shieldStartX = Math.max(0, shieldCenterX - shieldHalfWidth)
+    const shieldEndX = Math.min(width, shieldCenterX + shieldHalfWidth)
 
     this.context.save()
     this.context.globalCompositeOperation = 'lighter'

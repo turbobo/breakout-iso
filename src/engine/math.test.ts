@@ -42,6 +42,11 @@ describe('math helpers', () => {
     expect(getResponsiveSegmentWidth(72, 132, 720, 0.3, 88, 112)).toBe(72)
   })
 
+  it('supports full-width mobile responsive segments for shields', () => {
+    expect(getResponsiveSegmentWidth(320, 904, 720, 1, 160, Number.POSITIVE_INFINITY)).toBe(320)
+    expect(getResponsiveSegmentWidth(430, 904, 720, 1, 160, Number.POSITIVE_INFINITY)).toBe(430)
+  })
+
   it('reflects velocity around the collision normal', () => {
     expect(reflectVelocity({ x: 12, y: 8 }, { x: 0, y: -1 })).toEqual({ x: 12, y: -8 })
   })
