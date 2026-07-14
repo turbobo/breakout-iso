@@ -207,7 +207,7 @@ angle = -90° + hitRatio * 约 52°
 
 ## 10. UI 与 HUD
 
-- `src/main.ts` 定义 HUD、开始页、下一关过渡页、暂停页、结算页和关卡选择容器。
+- `src/main.ts` 定义 HUD、开始页、下一关过渡页、暂停页、结算页和关卡选择容器；开始页直接展示单行游戏名，不再显示部署宣传眉标。
 - `src/ui/hud.ts` 负责更新分数、最高分、关卡、模式、计时、机会、道具状态，以及覆盖层显隐、焦点和可访问性属性。
 - `src/game.ts` 通过 `Game.setPhase()` 统一维护游戏阶段，并集中映射 HUD 屏幕，避免开始、暂停、过渡和结算流程分散调用 `showScreen()`。
 - `HudController.renderLevelSelect()` 根据关卡摘要动态生成按钮式关卡卡片。

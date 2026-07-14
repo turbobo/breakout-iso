@@ -54,7 +54,6 @@ app.innerHTML = `
 
     <section class="screen-overlay is-visible" data-screen="start" role="dialog" aria-modal="true" aria-labelledby="start-title" aria-hidden="false">
       <div class="screen-card">
-        <p class="eyebrow">免费 · 静态部署 · EdgeOne 就绪</p>
         <h1 id="start-title">霓虹弹球打砖块</h1>
         <p class="screen-copy">
           纯前端画布弹球打砖块：16 个关卡、常规 / 限时 / 首领模式、连击、道具、爆炸砖块和护盾。
