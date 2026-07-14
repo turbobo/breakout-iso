@@ -31,6 +31,29 @@ import { HudController } from './ui/hud'
 type GamePhase = 'start' | 'playing' | 'transition' | 'paused' | 'result'
 type HudScreen = 'start' | 'transition' | 'pause' | 'result' | 'none'
 
+interface ResponsiveGameLayout {
+  width: number
+  height: number
+  safeTop: number
+  safeBottom: number
+  isMobile: boolean
+  isCompactLandscape: boolean
+  bottomDockHeight: number
+  controlDockHeight: number
+  playBottomY: number
+  paddleY: number
+  paddleWidth: number
+  shieldWidth: number
+  brickTopOffset: number
+  brickMaxGridWidth: number
+  minBrickHeight: number
+  maxBrickHeight: number
+  minBrickGap: number
+  maxBrickGap: number
+  minHorizontalMargin: number
+  maxHorizontalMargin: number
+}
+
 const gameConfig = {
   initialBallSpeed: 430,
   maxBallSpeed: 760,
@@ -64,6 +87,23 @@ const gameConfig = {
   desktopBottomDockHeight: 144,
   mobileControlDockHeight: 252,
   desktopControlDockHeight: 144,
+  compactLandscapeBottomDockHeight: 122,
+  compactLandscapeControlDockHeight: 154,
+  mobileHudHeight: 106,
+  mobilePowerupHeight: 48,
+  mobileHudGap: 8,
+  mobilePaddleBottomGap: 36,
+  desktopPaddleBottomGap: 36,
+  mobileBrickTopMin: 54,
+  mobileBrickTopMax: 92,
+  compactLandscapeBrickTopMin: 34,
+  compactLandscapeBrickTopMax: 54,
+  compactLandscapePaddleWidthRatio: 0.24,
+  compactLandscapeShieldWidthRatio: 0.48,
+  compactLandscapeMinPaddleWidth: 76,
+  compactLandscapeMaxPaddleWidth: 104,
+  compactLandscapeMinShieldWidth: 136,
+  compactLandscapeMaxShieldWidth: 220,
   bossPulseSpeedMultiplier: 1.08,
   defaultBossSkillIntervalSeconds: 8,
   brickCollisionCellSize: 96,
@@ -82,6 +122,7 @@ export class Game {
   private boardWidth = 960
   private boardHeight = 640
   private devicePixelRatio = 1
+  private layout: ResponsiveGameLayout = this.createResponsiveLayout(960, 640)
   private phase: GamePhase = 'start'
   private balls: Ball[] = []
   private bricks: Brick[] = []
@@ -232,6 +273,7 @@ export class Game {
     const handlePointerEnd = (event: PointerEvent): void => this.handlePointerEnd(event)
 
     window.addEventListener('resize', handleResize)
+    window.visualViewport?.addEventListener('resize', handleResize)
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
     this.canvas.addEventListener('pointerdown', handlePointerDown)
@@ -241,6 +283,7 @@ export class Game {
 
     this.eventCleanups.push(
       () => window.removeEventListener('resize', handleResize),
+      () => window.visualViewport?.removeEventListener('resize', handleResize),
       () => window.removeEventListener('keydown', handleKeyDown),
       () => window.removeEventListener('keyup', handleKeyUp),
       () => this.canvas.removeEventListener('pointerdown', handlePointerDown),
@@ -468,7 +511,7 @@ export class Game {
   private loadLevel(levelIndex: number): void {
     const levelDefinition = getLevelDefinition(levelIndex)
 
-    this.bricks = createLevelBricks(levelIndex, this.boardWidth)
+    this.bricks = this.createResponsiveLevelBricks(levelIndex)
     this.rebuildBrickCollisionBuckets()
     this.powerUps = []
     this.lives = getLevelChanceCount(levelIndex)
@@ -916,20 +959,22 @@ export class Game {
 
   private resize(): void {
     this.devicePixelRatio = Math.min(window.devicePixelRatio || 1, gameConfig.maxDevicePixelRatio)
-    this.boardWidth = Math.max(gameConfig.minBoardWidth, window.innerWidth)
-    this.boardHeight = Math.max(gameConfig.minBoardHeight, window.innerHeight)
+    const viewportSize = this.getViewportSize()
+    this.boardWidth = viewportSize.width
+    this.boardHeight = viewportSize.height
+    this.layout = this.createResponsiveLayout(this.boardWidth, this.boardHeight)
     this.canvas.width = Math.floor(this.boardWidth * this.devicePixelRatio)
     this.canvas.height = Math.floor(this.boardHeight * this.devicePixelRatio)
     this.canvas.style.width = `${this.boardWidth}px`
     this.canvas.style.height = `${this.boardHeight}px`
     this.context.setTransform(this.devicePixelRatio, 0, 0, this.devicePixelRatio, 0, 0)
-    this.paddle.setBaseWidth(this.getPaddleBaseWidth(), this.boardWidth)
-    this.paddle.position.y = this.getPaddleY()
+    this.paddle.setBaseWidth(this.layout.paddleWidth, this.boardWidth)
+    this.paddle.position.y = this.layout.paddleY
     this.paddle.position.x = clampPaddleCenterX(this.paddle.position.x, this.paddle.width, this.boardWidth)
     this.targetPaddleX = clampPaddleCenterX(this.targetPaddleX, this.paddle.width, this.boardWidth)
 
     if (this.bricks.length > 0) {
-      const resizedBricks = createLevelBricks(this.levelIndex, this.boardWidth)
+      const resizedBricks = this.createResponsiveLevelBricks(this.levelIndex)
 
       resizedBricks.forEach((resizedBrick, brickIndex) => {
         const previousBrick = this.bricks[brickIndex]
@@ -948,23 +993,100 @@ export class Game {
     }
   }
 
-  private getPlayBottomY(): number {
-    const mobileBottomDockHeight = this.boardWidth < gameConfig.mobileBreakpoint
-      ? gameConfig.mobileBottomDockHeight
-      : gameConfig.desktopBottomDockHeight
-    return this.boardHeight - mobileBottomDockHeight
+  private getViewportSize(): { width: number; height: number } {
+    const visualViewport = window.visualViewport
+    const viewportWidth = Math.floor(visualViewport?.width ?? window.innerWidth)
+    const viewportHeight = Math.floor(visualViewport?.height ?? window.innerHeight)
+    const width = Math.max(gameConfig.minBoardWidth, viewportWidth)
+    const isMobileViewport = width < gameConfig.mobileBreakpoint
+    const minimumHeight = isMobileViewport ? Math.min(gameConfig.minBoardHeight, 360) : gameConfig.minBoardHeight
+    const height = Math.max(minimumHeight, viewportHeight)
+
+    return { width, height }
   }
 
-  private getPaddleY(): number {
-    const mobileControlDockHeight = this.boardWidth < gameConfig.mobileBreakpoint
-      ? gameConfig.mobileControlDockHeight
-      : gameConfig.desktopControlDockHeight
-    return this.boardHeight - mobileControlDockHeight
+  private createResponsiveLayout(width: number, height: number): ResponsiveGameLayout {
+    const visualViewport = window.visualViewport
+    const safeTop = Math.max(0, Math.floor(visualViewport?.offsetTop ?? 0))
+    const safeBottom = Math.max(
+      0,
+      Math.floor(window.innerHeight - ((visualViewport?.height ?? window.innerHeight) + (visualViewport?.offsetTop ?? 0))),
+    )
+    const isMobile = width < gameConfig.mobileBreakpoint
+    const isCompactLandscape = isMobile && width > height && height < gameConfig.minBoardHeight
+    const bottomDockHeight = this.getResponsiveBottomDockHeight(height, safeBottom, isCompactLandscape)
+    const controlDockHeight = this.getResponsiveControlDockHeight(bottomDockHeight, isCompactLandscape)
+    const playBottomY = Math.max(height * 0.46, height - bottomDockHeight)
+    const paddleBottomGap = isMobile ? gameConfig.mobilePaddleBottomGap : gameConfig.desktopPaddleBottomGap
+    const paddleY = clamp(height - controlDockHeight, height * 0.5, playBottomY - paddleBottomGap)
+    const paddleWidth = this.getResponsivePaddleWidth(width, isCompactLandscape)
+    const shieldWidth = this.getResponsiveShieldWidth(width, isCompactLandscape)
+    const brickTopOffset = this.getResponsiveBrickTopOffset(height, safeTop, isMobile, isCompactLandscape)
+    const brickMaxGridWidth = this.getResponsiveBrickGridWidth(width, isMobile, isCompactLandscape)
+
+    return {
+      width,
+      height,
+      safeTop,
+      safeBottom,
+      isMobile,
+      isCompactLandscape,
+      bottomDockHeight,
+      controlDockHeight,
+      playBottomY,
+      paddleY,
+      paddleWidth,
+      shieldWidth,
+      brickTopOffset,
+      brickMaxGridWidth,
+      minBrickHeight: isCompactLandscape ? 10 : isMobile ? 12 : 14,
+      maxBrickHeight: isCompactLandscape ? 14 : isMobile ? 18 : 20,
+      minBrickGap: isMobile ? 3 : 4,
+      maxBrickGap: isCompactLandscape ? 4 : isMobile ? 5 : 6,
+      minHorizontalMargin: isMobile ? 8 : 12,
+      maxHorizontalMargin: isCompactLandscape ? 16 : isMobile ? 20 : 44,
+    }
   }
 
-  private getPaddleBaseWidth(): number {
+  private getResponsiveBottomDockHeight(height: number, safeBottom: number, isCompactLandscape: boolean): number {
+    if (isCompactLandscape) {
+      return Math.min(gameConfig.compactLandscapeBottomDockHeight + safeBottom, height * 0.36)
+    }
+
+    if (this.boardWidth < gameConfig.mobileBreakpoint) {
+      const dockHeight = gameConfig.mobileHudHeight + gameConfig.mobilePowerupHeight + gameConfig.mobileHudGap * 3 + safeBottom
+      return Math.min(Math.max(dockHeight, 172), height * 0.42)
+    }
+
+    return gameConfig.desktopBottomDockHeight
+  }
+
+  private getResponsiveControlDockHeight(bottomDockHeight: number, isCompactLandscape: boolean): number {
+    if (isCompactLandscape) {
+      return gameConfig.compactLandscapeControlDockHeight
+    }
+
+    if (this.boardWidth < gameConfig.mobileBreakpoint) {
+      return Math.max(bottomDockHeight + 34, gameConfig.mobileControlDockHeight)
+    }
+
+    return gameConfig.desktopControlDockHeight
+  }
+
+  private getResponsivePaddleWidth(width: number, isCompactLandscape: boolean): number {
+    if (isCompactLandscape) {
+      return getResponsiveSegmentWidth(
+        width,
+        gameConfig.desktopPaddleWidth,
+        gameConfig.mobileBreakpoint,
+        gameConfig.compactLandscapePaddleWidthRatio,
+        gameConfig.compactLandscapeMinPaddleWidth,
+        gameConfig.compactLandscapeMaxPaddleWidth,
+      )
+    }
+
     return getResponsiveSegmentWidth(
-      this.boardWidth,
+      width,
       gameConfig.desktopPaddleWidth,
       gameConfig.mobileBreakpoint,
       gameConfig.mobilePaddleWidthRatio,
@@ -973,15 +1095,85 @@ export class Game {
     )
   }
 
-  private getShieldWidth(): number {
+  private getResponsiveShieldWidth(width: number, isCompactLandscape: boolean): number {
+    if (isCompactLandscape) {
+      return getResponsiveSegmentWidth(
+        width,
+        width - gameConfig.desktopShieldWidthInset,
+        gameConfig.mobileBreakpoint,
+        gameConfig.compactLandscapeShieldWidthRatio,
+        gameConfig.compactLandscapeMinShieldWidth,
+        gameConfig.compactLandscapeMaxShieldWidth,
+      )
+    }
+
     return getResponsiveSegmentWidth(
-      this.boardWidth,
-      this.boardWidth - gameConfig.desktopShieldWidthInset,
+      width,
+      width - gameConfig.desktopShieldWidthInset,
       gameConfig.mobileBreakpoint,
       gameConfig.mobileShieldWidthRatio,
       gameConfig.mobileMinShieldWidth,
       gameConfig.mobileMaxShieldWidth,
     )
+  }
+
+  private getResponsiveBrickTopOffset(
+    height: number,
+    safeTop: number,
+    isMobile: boolean,
+    isCompactLandscape: boolean,
+  ): number {
+    if (isCompactLandscape) {
+      return safeTop + clamp(height * 0.1, gameConfig.compactLandscapeBrickTopMin, gameConfig.compactLandscapeBrickTopMax)
+    }
+
+    if (isMobile) {
+      return safeTop + clamp(height * 0.12, gameConfig.mobileBrickTopMin, gameConfig.mobileBrickTopMax)
+    }
+
+    return 72
+  }
+
+  private getResponsiveBrickGridWidth(width: number, isMobile: boolean, isCompactLandscape: boolean): number {
+    if (isCompactLandscape) {
+      return width - 24
+    }
+
+    if (isMobile) {
+      return width - 16
+    }
+
+    return width >= 900 ? 840 : width - 24
+  }
+
+  private createResponsiveLevelBricks(levelIndex: number): Brick[] {
+    return createLevelBricks(levelIndex, this.boardWidth, {
+      playBottomY: this.layout.playBottomY,
+      topOffset: this.layout.brickTopOffset,
+      maxGridWidth: this.layout.brickMaxGridWidth,
+      minBrickHeight: this.layout.minBrickHeight,
+      maxBrickHeight: this.layout.maxBrickHeight,
+      minBrickGap: this.layout.minBrickGap,
+      maxBrickGap: this.layout.maxBrickGap,
+      minHorizontalMargin: this.layout.minHorizontalMargin,
+      maxHorizontalMargin: this.layout.maxHorizontalMargin,
+    })
+  }
+
+  private getPlayBottomY(): number {
+    return this.layout.playBottomY
+  }
+
+  private getPaddleY(): number {
+    return this.layout.paddleY
+  }
+
+  private getPaddleBaseWidth(): number {
+    return this.layout.paddleWidth
+  }
+
+  private getShieldWidth(): number {
+    return this.layout.shieldWidth
   }
 
   private isBallWithinShield(ball: Ball): boolean {

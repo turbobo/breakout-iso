@@ -1,4 +1,8 @@
 :root {
+  --mobile-safe-bottom: max(8px, env(safe-area-inset-bottom));
+  --mobile-hud-height: 106px;
+  --mobile-hud-gap: 8px;
+  --mobile-powerup-height: 48px;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: #f8fbff;
@@ -453,15 +457,23 @@ h2 {
 }
 
 @media (max-width: 720px) {
+  #app,
+  .game-shell,
+  .game-canvas {
+    height: 100svh;
+    height: 100dvh;
+  }
+
   .top-hud {
     top: auto;
     right: auto;
-    bottom: max(8px, env(safe-area-inset-bottom));
+    bottom: var(--mobile-safe-bottom);
     left: 50%;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) 44px;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 42px;
     gap: 5px;
     width: calc(100vw - 16px);
     max-width: none;
+    min-height: var(--mobile-hud-height);
     padding: 7px;
     border-radius: 22px;
     transform: translateX(-50%);
@@ -499,12 +511,15 @@ h2 {
 
   .toast {
     top: max(18px, env(safe-area-inset-top));
+    max-width: calc(100vw - 28px);
+    text-align: center;
   }
 
   .powerup-bar {
-    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 120px);
+    bottom: calc(var(--mobile-safe-bottom) + var(--mobile-hud-height) + var(--mobile-hud-gap));
     width: calc(100vw - 16px);
     max-width: none;
+    min-height: var(--mobile-powerup-height);
     justify-content: center;
     padding: 7px;
     border-radius: 22px;
@@ -512,16 +527,168 @@ h2 {
 
   .powerup-bar span {
     flex: 1;
+    min-width: 0;
     padding: 8px 5px;
+    overflow: hidden;
     font-size: 10px;
     text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .touch-guide {
     right: 50%;
-    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 206px);
+    bottom: calc(
+      var(--mobile-safe-bottom) + var(--mobile-hud-height) + var(--mobile-powerup-height) + var(--mobile-hud-gap) * 2
+    );
     display: block;
+    max-width: calc(100vw - 32px);
+    text-align: center;
     transform: translateX(50%);
+  }
+
+  .screen-overlay {
+    padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+  }
+
+  .screen-card {
+    width: min(100%, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow: auto;
+    padding: clamp(20px, 7vw, 34px);
+    border-radius: 28px;
+  }
+
+  h1 {
+    font-size: clamp(42px, 13vw, 64px);
+  }
+
+  h2 {
+    font-size: clamp(30px, 10vw, 44px);
+  }
+
+  .screen-copy {
+    margin: 16px auto 20px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .level-select {
+    margin-top: 18px;
+  }
+
+  .level-grid {
+    grid-template-columns: 1fr;
+    max-height: min(280px, 34dvh);
+  }
+
+  .level-card {
+    min-height: 88px;
+    padding: 11px;
+  }
+}
+
+@media (max-width: 360px) {
+  :root {
+    --mobile-hud-height: 100px;
+    --mobile-powerup-height: 44px;
+    --mobile-hud-gap: 6px;
+  }
+
+  .top-hud {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 38px;
+    gap: 4px;
+    width: calc(100vw - 10px);
+    padding: 6px;
+  }
+
+  .hud-item {
+    padding: 6px 3px;
+  }
+
+  .hud-item span {
+    font-size: 7px;
+  }
+
+  .hud-item strong {
+    font-size: 13px;
+  }
+
+  .icon-button {
+    min-height: 38px;
+  }
+
+  .powerup-bar {
+    width: calc(100vw - 10px);
+    gap: 5px;
+    padding: 6px;
+  }
+
+  .powerup-bar span {
+    padding: 7px 3px;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+  }
+}
+
+@media (max-width: 720px) and (orientation: landscape) and (max-height: 520px) {
+  :root {
+    --mobile-hud-height: 58px;
+    --mobile-powerup-height: 38px;
+    --mobile-hud-gap: 6px;
+  }
+
+  .top-hud {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) 40px;
+    min-height: var(--mobile-hud-height);
+    padding: 5px;
+    border-radius: 18px;
+  }
+
+  .hud-item {
+    padding: 5px 4px;
+  }
+
+  .hud-item span {
+    font-size: 7px;
+  }
+
+  .hud-item strong {
+    font-size: 13px;
+  }
+
+  .icon-button {
+    min-height: 34px;
+  }
+
+  .powerup-bar {
+    width: min(420px, calc(100vw - 16px));
+    min-height: var(--mobile-powerup-height);
+    padding: 5px;
+    border-radius: 18px;
+  }
+
+  .powerup-bar span {
+    padding: 6px 4px;
+    font-size: 9px;
+  }
+
+  .touch-guide {
+    display: none;
+  }
+
+  .screen-card {
+    max-height: calc(100dvh - 16px);
+    padding: 18px;
+  }
+
+  .level-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: 34dvh;
+  }
+
+  .control-hints {
+    display: none;
   }
 }
 

@@ -213,8 +213,9 @@ angle = -90° + hitRatio * 约 52°
 - `HudController.renderLevelSelect()` 根据关卡摘要动态生成按钮式关卡卡片。
 - `HudController.showLevelTransition()` 和 `HudController.showResult()` 只渲染内容，实际切屏由 `Game.setPhase()` 统一触发，确保 phase、覆盖层和焦点状态一致。
 - PC 端 HUD 布局：分数、关卡、模式、计时、机会和暂停按钮以底部横向面板形式居中显示（`bottom: 16px`, `left: 50%`, `max-width: 960px`），道具栏独立放在分数菜单上方（`bottom: 82px`），形成底部双层布局，避免两个菜单重叠；两层均参考移动端胶囊风格；砖块布局使用全画布宽度，通过 `desktopBottomDockHeight: 144` 和 `desktopControlDockHeight: 144` 预留底部空间，确保挡板和弹球不会进入 HUD 区域。
-- 移动端 HUD 布局：分数菜单贴近安全区底部（`bottom: max(8px, env(safe-area-inset-bottom))`），道具栏固定在分数菜单上方（`bottom: calc(max(8px, env(safe-area-inset-bottom)) + 120px)`），显示顺序与 PC 端一致；触控提示进一步上移，形成移动端底部双层兼容布局；通过 `mobileBottomDockHeight: 212` 和 `mobileControlDockHeight: 252` 预留空间，避免遮挡挡板、弹球和触控操作区域。
-- 移动端挡板与护盾适配：挡板基础宽度通过 `getResponsiveSegmentWidth()` 按屏宽缩放到约 30%，并限制在 88～112px；PC 端保持 132px。护盾在移动端居中缩短为约 62% 屏宽，并限制在 160～260px，视觉长度和实际拦截范围一致，避免小屏下挡板和护盾过长。
+- 移动端自适应布局：`Game` 在 `resize()` 中基于 `visualViewport` 计算统一响应式布局，集中给出底部菜单预留区、可玩底线、挡板 Y 坐标、挡板宽度、护盾宽度、砖块顶部偏移和砖块网格宽高约束。砖块布局通过 `createLevelBricks()` 的布局参数同时考虑屏幕宽度、行列数和底部控制区，确保 320px 窄屏和短横屏下砖块不会溢出或压到挡板区域。
+- 移动端 HUD 布局：分数菜单通过 CSS 变量贴近安全区底部（`--mobile-safe-bottom`），道具栏通过 `--mobile-hud-height`、`--mobile-powerup-height` 和 `--mobile-hud-gap` 自动固定在分数菜单上方，避免继续依赖固定 `120px` 偏移；≤360px 设备进一步压缩字号、间距和按钮宽度，横屏短屏切换为单行紧凑 HUD 并隐藏触控提示。
+- 移动端挡板与护盾适配：挡板基础宽度通过 `getResponsiveSegmentWidth()` 按屏宽缩放到约 30%，并限制在 88～112px；短横屏改用更短比例和 76～104px 限制。护盾在移动端居中缩短为约 62% 屏宽，短横屏进一步缩短为约 48% 屏宽，视觉长度和实际拦截范围一致，避免小屏下挡板和护盾过长。
 - 开始、过渡、暂停和结算覆盖层使用 `dialog` 语义、`aria-modal` 和标题关联，隐藏时同步 `aria-hidden` 与 `inert`，避免不可见控件进入 Tab 顺序。
 - 屏幕切换后焦点自动落到当前覆盖层主按钮；回到游戏时焦点返回 Canvas，保证键盘用户能继续用空格、方向键和快捷键操作。
 - 按钮和关卡卡片提供 `:focus-visible` 高对比焦点样式。
@@ -268,9 +269,10 @@ value: number string
 ## 15. 验证策略
 
 - `npm run build` 执行 TypeScript 类型检查并生成生产构建。
-- `npm run test` 使用 Vitest 覆盖核心数学工具和砖块实体规则，作为后续碰撞、边界和类型守卫改动的回归基线。
+- `npm run test` 使用 Vitest 覆盖核心数学工具、砖块实体规则和关卡砖块布局，作为后续碰撞、边界和类型守卫改动的回归基线。
 - 挡板边界统一通过 `clampPaddleCenterX()` 约束，测试覆盖普通边界和棋盘窄于挡板的兜底场景。
 - 移动端挡板和护盾宽度统一通过 `getResponsiveSegmentWidth()` 计算，测试覆盖桌面保持原宽、移动端比例缩放、最小/最大值限制和极窄屏兜底。
+- 砖块自适应布局通过 `createLevelBricks()` 覆盖桌面、紧凑桌面、320px 窄屏和短屏底部预留场景，确保砖块不会超出横向视口或压入控制区域。
 - 挡板扫掠碰撞通过 `resolveSweptCircleTopRectCollision()` 覆盖高速球跨帧穿过挡板顶部的回归场景，并验证横向错过时不会误判。
 - 弹球轨迹稳定通过 `stabilizeVelocityAxes()` 覆盖纯横向、纯纵向和正常斜向速度场景，确保防卡死逻辑保速、方向确定且不会影响已有有效反弹角。
 - 砖块类型判断统一提供 `isSteelBrick()`、`isBossBrick()` 和 `isDestructibleBrick()` 类型守卫，测试覆盖钢铁、首领和普通砖块行为。

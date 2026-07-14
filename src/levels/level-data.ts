@@ -25,6 +25,18 @@ export interface LevelSummary {
   chanceCount: number
 }
 
+export interface LevelBrickLayoutOptions {
+  playBottomY?: number
+  topOffset?: number
+  maxGridWidth?: number
+  minBrickHeight?: number
+  maxBrickHeight?: number
+  minBrickGap?: number
+  maxBrickGap?: number
+  minHorizontalMargin?: number
+  maxHorizontalMargin?: number
+}
+
 const defaultPowerUpDropRate = 0.22
 const hardLevelDifficultyThreshold = 5
 const simpleLevelChanceCount = 1
@@ -208,18 +220,40 @@ export function getLevelSummaries(): LevelSummary[] {
   }))
 }
 
-export function createLevelBricks(levelIndex: number, boardWidth: number): Brick[] {
+export function createLevelBricks(levelIndex: number, boardWidth: number, options: LevelBrickLayoutOptions = {}): Brick[] {
   const definition = getLevelDefinition(levelIndex)
   const columns = Math.max(...definition.pattern.map((row) => row.length))
+  const rowCount = definition.pattern.length
   const playfieldWidth = boardWidth
-  const brickGap = clampLayoutValue(playfieldWidth * 0.009, 4, 6)
-  const horizontalMargin = clampLayoutValue(playfieldWidth * 0.04, 12, 44)
+  const brickGap = clampLayoutValue(
+    playfieldWidth * 0.009,
+    options.minBrickGap ?? 4,
+    options.maxBrickGap ?? 6,
+  )
+  const horizontalMargin = clampLayoutValue(
+    playfieldWidth * 0.04,
+    options.minHorizontalMargin ?? 12,
+    options.maxHorizontalMargin ?? 44,
+  )
   const availableGridWidth = playfieldWidth - horizontalMargin * 2
-  const maxGridWidth = playfieldWidth >= 900 ? 840 : availableGridWidth
-  const gridWidth = Math.max(280, Math.min(availableGridWidth, maxGridWidth))
+  const defaultMaxGridWidth = playfieldWidth >= 900 ? 840 : availableGridWidth
+  const maxGridWidth = Math.min(options.maxGridWidth ?? defaultMaxGridWidth, availableGridWidth)
+  const minimumGridWidth = Math.min(280, availableGridWidth)
+  const gridWidth = Math.max(minimumGridWidth, Math.min(availableGridWidth, maxGridWidth))
   const brickWidth = (gridWidth - brickGap * (columns - 1)) / columns
-  const brickHeight = clampLayoutValue(playfieldWidth * 0.032, 14, 20)
-  const topOffset = boardWidth <= 720 ? 92 : 72
+  const minBrickHeight = options.minBrickHeight ?? 14
+  const maxBrickHeight = options.maxBrickHeight ?? 20
+  const preferredBrickHeight = clampLayoutValue(playfieldWidth * 0.032, minBrickHeight, maxBrickHeight)
+  const topOffset = options.topOffset ?? (boardWidth <= 720 ? 92 : 72)
+  const brickHeight = getResponsiveBrickHeight(
+    preferredBrickHeight,
+    minBrickHeight,
+    maxBrickHeight,
+    rowCount,
+    brickGap,
+    topOffset,
+    options.playBottomY,
+  )
   const startX = (playfieldWidth - gridWidth) / 2
   const bricks: Brick[] = []
 
@@ -267,6 +301,29 @@ export function getLevelPowerUpDropRate(levelIndex: number): number {
 
 function clampLayoutValue(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
+}
+
+function getResponsiveBrickHeight(
+  preferredBrickHeight: number,
+  minBrickHeight: number,
+  maxBrickHeight: number,
+  rowCount: number,
+  brickGap: number,
+  topOffset: number,
+  playBottomY?: number,
+): number {
+  if (playBottomY === undefined) {
+    return preferredBrickHeight
+  }
+
+  const bottomSafetyGap = Math.max(14, preferredBrickHeight * 1.2)
+  const availableGridHeight = Math.max(
+    rowCount * minBrickHeight,
+    playBottomY - topOffset - bottomSafetyGap,
+  )
+  const fittedBrickHeight = (availableGridHeight - brickGap * (rowCount - 1)) / rowCount
+
+  return clampLayoutValue(Math.min(preferredBrickHeight, fittedBrickHeight), minBrickHeight, maxBrickHeight)
 }
 
 function getBrickKind(symbol: string): BrickKind {
