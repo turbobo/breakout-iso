@@ -12,6 +12,7 @@ import {
   resolveCircleRectCollision,
   resolveSweptCircleTopRectCollision,
   scaleToLength,
+  stabilizeVelocityAxes,
 } from './engine/math'
 import { ParticleSystem } from './engine/particles'
 import { Renderer } from './engine/renderer'
@@ -66,6 +67,8 @@ const gameConfig = {
   bossPulseSpeedMultiplier: 1.08,
   defaultBossSkillIntervalSeconds: 8,
   brickCollisionCellSize: 96,
+  minBallHorizontalVelocityRatio: 0.12,
+  minBallVerticalVelocityRatio: 0.16,
 } as const
 
 export class Game {
@@ -490,22 +493,31 @@ export class Game {
 
   private handleWallCollisions(): void {
     for (const ball of this.balls) {
+      let reflected = false
+
       if (ball.position.x - ball.radius < 0) {
         ball.position.x = ball.radius
         ball.velocity.x = Math.abs(ball.velocity.x)
+        reflected = true
         this.audio.play('wall', 0.72)
       }
 
       if (ball.position.x + ball.radius > this.boardWidth) {
         ball.position.x = this.boardWidth - ball.radius
         ball.velocity.x = -Math.abs(ball.velocity.x)
+        reflected = true
         this.audio.play('wall', 0.72)
       }
 
       if (ball.position.y - ball.radius < 0) {
         ball.position.y = ball.radius
         ball.velocity.y = Math.abs(ball.velocity.y)
+        reflected = true
         this.audio.play('wall', 0.72)
+      }
+
+      if (reflected) {
+        this.stabilizeBallVelocity(ball)
       }
     }
   }
@@ -539,6 +551,10 @@ export class Game {
       ball.position.y = sweptCollision?.hitPosition.y ?? ball.position.y - collision!.penetration - 1
       ball.velocity.x = Math.cos(angle) * speed
       ball.velocity.y = Math.sin(angle) * speed
+      this.stabilizeBallVelocity(ball, {
+        fallbackHorizontalDirection: impactX >= this.paddle.position.x ? 1 : -1,
+        fallbackVerticalDirection: -1,
+      })
       this.audio.play('paddle')
     }
   }
@@ -560,6 +576,9 @@ export class Game {
           ball.position.x += collision.normal.x * collision.penetration
           ball.position.y += collision.normal.y * collision.penetration
           ball.velocity = reflectVelocity(ball.velocity, collision.normal)
+          this.stabilizeBallVelocity(ball, {
+            fallbackVerticalDirection: this.getBrickFallbackVerticalDirection(ball, brick),
+          })
         }
 
         if (destroyed) {
@@ -720,6 +739,7 @@ export class Game {
   private increaseBallSpeed(ball: Ball): void {
     const nextSpeed = Math.min(gameConfig.maxBallSpeed, getSpeed(ball.velocity) * gameConfig.ballSpeedIncreaseMultiplier)
     ball.velocity = scaleToLength(ball.velocity, nextSpeed)
+    this.stabilizeBallVelocity(ball)
     this.hud.showToast('速度提升')
   }
 
@@ -780,16 +800,16 @@ export class Game {
 
     for (const angleOffset of gameConfig.multiBallAngleOffsets) {
       const baseAngle = Math.atan2(sourceBall.velocity.y, sourceBall.velocity.x)
-      this.balls.push(
-        new Ball(
-          { ...sourceBall.position },
-          {
-            x: Math.cos(baseAngle + angleOffset) * speed,
-            y: Math.sin(baseAngle + angleOffset) * speed,
-          },
-          sourceBall.radius,
-        ),
+      const ball = new Ball(
+        { ...sourceBall.position },
+        {
+          x: Math.cos(baseAngle + angleOffset) * speed,
+          y: Math.sin(baseAngle + angleOffset) * speed,
+        },
+        sourceBall.radius,
       )
+      this.stabilizeBallVelocity(ball)
+      this.balls.push(ball)
     }
   }
 
@@ -805,6 +825,7 @@ export class Game {
         this.shieldCharges -= 1
         ball.position.y = playBottomY - gameConfig.shieldBounceOffsetY
         ball.velocity.y = -Math.abs(ball.velocity.y)
+        this.stabilizeBallVelocity(ball, { fallbackVerticalDirection: -1 })
         this.audio.play('paddle')
         this.hud.showToast('护盾抵挡')
         continue
@@ -972,6 +993,33 @@ export class Game {
     return ball.position.x + ball.radius >= shieldStartX && ball.position.x - ball.radius <= shieldEndX
   }
 
+  private stabilizeBallVelocity(
+    ball: Ball,
+    options: { fallbackHorizontalDirection?: number; fallbackVerticalDirection?: number } = {},
+  ): void {
+    const fallbackHorizontalDirection = options.fallbackHorizontalDirection ?? this.getBallFallbackHorizontalDirection(ball)
+    const fallbackVerticalDirection = options.fallbackVerticalDirection ?? this.getBallFallbackVerticalDirection(ball)
+
+    ball.velocity = stabilizeVelocityAxes(ball.velocity, {
+      minHorizontalRatio: gameConfig.minBallHorizontalVelocityRatio,
+      minVerticalRatio: gameConfig.minBallVerticalVelocityRatio,
+      fallbackHorizontalDirection,
+      fallbackVerticalDirection,
+    })
+  }
+
+  private getBallFallbackHorizontalDirection(ball: Ball): number {
+    return ball.position.x >= this.boardWidth / 2 ? 1 : -1
+  }
+
+  private getBallFallbackVerticalDirection(ball: Ball): number {
+    return ball.position.y >= this.getPlayBottomY() / 2 ? -1 : 1
+  }
+
+  private getBrickFallbackVerticalDirection(ball: Ball, brick: Brick): number {
+    return ball.position.y >= brick.center.y ? 1 : -1
+  }
+
   private updateHud(): void {
     this.bestScore = Math.max(this.bestScore, this.score)
     const displayLevelIndex = Math.min(this.levelIndex, getLevelCount() - 1)
@@ -1018,6 +1066,7 @@ export class Game {
     this.balls.forEach((ball) => {
       const nextSpeed = Math.min(gameConfig.maxBallSpeed, getSpeed(ball.velocity) * gameConfig.bossPulseSpeedMultiplier)
       ball.velocity = scaleToLength(ball.velocity, nextSpeed)
+      this.stabilizeBallVelocity(ball)
     })
     this.shake = Math.max(this.shake, 10)
     this.audio.play('explosion', 0.72)

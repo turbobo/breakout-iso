@@ -86,12 +86,63 @@ export function getSpeed(vector: Vector2): number {
   return Math.hypot(vector.x, vector.y)
 }
 
+export interface StabilizeVelocityAxesOptions {
+  minHorizontalRatio: number
+  minVerticalRatio: number
+  fallbackHorizontalDirection?: number
+  fallbackVerticalDirection?: number
+}
+
 export function reflectVelocity(velocity: Vector2, normal: Vector2): Vector2 {
   const dotProduct = velocity.x * normal.x + velocity.y * normal.y
 
   return {
     x: velocity.x - 2 * dotProduct * normal.x,
     y: velocity.y - 2 * dotProduct * normal.y,
+  }
+}
+
+export function stabilizeVelocityAxes(
+  velocity: Vector2,
+  options: StabilizeVelocityAxesOptions,
+): Vector2 {
+  const speed = getSpeed(velocity)
+
+  if (speed <= 0) {
+    return { ...velocity }
+  }
+
+  const minHorizontalRatio = clamp(options.minHorizontalRatio, 0, 0.95)
+  const minVerticalRatio = clamp(options.minVerticalRatio, 0, 0.95)
+  let horizontalRatio = Math.abs(velocity.x) / speed
+  let verticalRatio = Math.abs(velocity.y) / speed
+
+  if (horizontalRatio >= minHorizontalRatio && verticalRatio >= minVerticalRatio) {
+    return { ...velocity }
+  }
+
+  if (horizontalRatio < minHorizontalRatio) {
+    horizontalRatio = minHorizontalRatio
+    verticalRatio = Math.sqrt(Math.max(0, 1 - horizontalRatio * horizontalRatio))
+  }
+
+  if (verticalRatio < minVerticalRatio) {
+    verticalRatio = minVerticalRatio
+    horizontalRatio = Math.sqrt(Math.max(0, 1 - verticalRatio * verticalRatio))
+  }
+
+  if (horizontalRatio < minHorizontalRatio) {
+    const minRatioLength = Math.hypot(minHorizontalRatio, minVerticalRatio)
+    horizontalRatio = minHorizontalRatio / minRatioLength
+    verticalRatio = minVerticalRatio / minRatioLength
+  }
+
+  const horizontalDirection = getDirection(velocity.x, options.fallbackHorizontalDirection ?? 1)
+  const verticalDirection = getDirection(velocity.y, options.fallbackVerticalDirection ?? -1)
+
+  return {
+    x: horizontalDirection * horizontalRatio * speed,
+    y: verticalDirection * verticalRatio * speed,
   }
 }
 
@@ -169,4 +220,16 @@ export function resolveSweptCircleTopRectCollision(
     normal: { x: 0, y: -1 },
     hitPosition: { x: hitX, y: expandedTopY },
   }
+}
+
+function getDirection(value: number, fallbackDirection: number): number {
+  if (value < 0) {
+    return -1
+  }
+
+  if (value > 0) {
+    return 1
+  }
+
+  return fallbackDirection < 0 ? -1 : 1
 }

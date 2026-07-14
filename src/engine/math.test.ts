@@ -4,9 +4,11 @@ import {
   clamp,
   clampPaddleCenterX,
   getResponsiveSegmentWidth,
+  getSpeed,
   reflectVelocity,
   resolveCircleRectCollision,
   resolveSweptCircleTopRectCollision,
+  stabilizeVelocityAxes,
 } from './math'
 
 describe('math helpers', () => {
@@ -42,6 +44,34 @@ describe('math helpers', () => {
 
   it('reflects velocity around the collision normal', () => {
     expect(reflectVelocity({ x: 12, y: 8 }, { x: 0, y: -1 })).toEqual({ x: 12, y: -8 })
+  })
+
+  it('adds a vertical component to avoid pure horizontal loops while preserving speed', () => {
+    const velocity = stabilizeVelocityAxes(
+      { x: 500, y: 0 },
+      { minHorizontalRatio: 0.12, minVerticalRatio: 0.16, fallbackVerticalDirection: -1 },
+    )
+
+    expect(getSpeed(velocity)).toBeCloseTo(500)
+    expect(Math.abs(velocity.y) / getSpeed(velocity)).toBeGreaterThan(0.159)
+    expect(velocity.y).toBeLessThan(0)
+  })
+
+  it('adds a horizontal component to avoid pure vertical loops while preserving speed', () => {
+    const velocity = stabilizeVelocityAxes(
+      { x: 0, y: -500 },
+      { minHorizontalRatio: 0.12, minVerticalRatio: 0.16, fallbackHorizontalDirection: -1 },
+    )
+
+    expect(getSpeed(velocity)).toBeCloseTo(500)
+    expect(Math.abs(velocity.x) / getSpeed(velocity)).toBeGreaterThan(0.119)
+    expect(velocity.x).toBeLessThan(0)
+  })
+
+  it('keeps stable non-axis velocity unchanged', () => {
+    const velocity = { x: 180, y: -420 }
+
+    expect(stabilizeVelocityAxes(velocity, { minHorizontalRatio: 0.12, minVerticalRatio: 0.16 })).toEqual(velocity)
   })
 
   it('resolves circle and rect collisions with a usable normal', () => {
