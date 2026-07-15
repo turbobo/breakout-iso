@@ -40,10 +40,10 @@ app.innerHTML = `
     </section>
 
     <section class="powerup-bar" aria-label="当前道具">
-      <span data-powerup="multiball">多球</span>
-      <span data-powerup="wide">加宽</span>
-      <span data-powerup="fireball">火球</span>
-      <span data-powerup="shield">护盾</span>
+      <span data-powerup="multiball">多球<small>分裂</small></span>
+      <span data-powerup="wide">加宽<small>15秒</small></span>
+      <span data-powerup="fireball">火球<small>穿透</small></span>
+      <span data-powerup="shield">护盾<small>抵挡</small></span>
     </section>
 
     <div class="toast" data-hud="toast" role="status" aria-live="polite"></div>
@@ -65,6 +65,12 @@ app.innerHTML = `
             <span>常规 · 限时 · 首领</span>
           </div>
           <div class="level-grid" data-level-list></div>
+        </div>
+        <div class="powerup-guide" aria-label="道具说明">
+          <span class="powerup-icon">🎯 多球</span>
+          <span class="powerup-icon">↔️ 加宽</span>
+          <span class="powerup-icon">🔥 火球</span>
+          <span class="powerup-icon">🛡️ 护盾</span>
         </div>
         <div class="control-hints">
           <span>手机端拖动任意空白区域</span>
@@ -93,6 +99,15 @@ app.innerHTML = `
         <button class="primary-button" data-action="resume" type="button">继续</button>
         <button class="secondary-button" data-action="restart" type="button">重新开始</button>
         <button class="secondary-button" data-action="menu" type="button">选择关卡</button>
+        <div class="pause-powerup-guide">
+          <h3>道具说明</h3>
+          <ul>
+            <li><strong>🎯 多球</strong>：分裂为多个弹球，最多5个</li>
+            <li><strong>↔️ 加宽</strong>：挡板加长，持续15秒</li>
+            <li><strong>🔥 火球</strong>：穿透砖块，持续10秒</li>
+            <li><strong>🛡️ 护盾</strong>：底部护盾抵挡一次掉球</li>
+          </ul>
+        </div>
       </div>
     </section>
 

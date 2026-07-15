@@ -183,6 +183,9 @@ button {
 }
 
 .powerup-bar span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   padding: 8px 12px;
   color: rgba(248, 251, 255, 0.42);
   border: 1px solid rgba(255, 255, 255, 0.09);
@@ -193,11 +196,23 @@ button {
   text-transform: uppercase;
 }
 
+.powerup-bar span small {
+  color: rgba(248, 251, 255, 0.32);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
 .powerup-bar span.is-active {
   color: #06101c;
   border-color: rgba(255, 255, 255, 0.44);
   background: #7cdbff;
   box-shadow: 0 0 24px rgba(124, 219, 255, 0.48);
+}
+
+.powerup-bar span.is-active small {
+  color: rgba(6, 16, 28, 0.68);
 }
 
 .touch-guide {
@@ -478,6 +493,58 @@ h2 {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.07);
   font-size: 12px;
+}
+
+.powerup-guide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.powerup-icon {
+  padding: 8px 12px;
+  color: rgba(248, 251, 255, 0.82);
+  border: 1px solid rgba(124, 219, 255, 0.24);
+  border-radius: 12px;
+  background: rgba(124, 219, 255, 0.08);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pause-powerup-guide {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  text-align: left;
+}
+
+.pause-powerup-guide h3 {
+  margin: 0 0 12px;
+  color: #7cdbff;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pause-powerup-guide ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pause-powerup-guide li {
+  padding: 6px 0;
+  color: rgba(248, 251, 255, 0.78);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.pause-powerup-guide strong {
+  color: #ffffff;
 }
 
 @media (max-width: 720px) {
