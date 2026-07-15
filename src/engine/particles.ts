@@ -52,6 +52,10 @@ export class ParticleSystem {
     this.particles.length = activeParticleCount
   }
 
+  public hasActiveParticles(): boolean {
+    return this.particles.length > 0
+  }
+
   public draw(context: CanvasRenderingContext2D): void {
     context.save()
     context.globalCompositeOperation = 'lighter'

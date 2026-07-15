@@ -209,7 +209,7 @@ angle = -90° + hitRatio * 约 52°
 
 - `src/main.ts` 定义 HUD、开始页、下一关过渡页、暂停页、结算页和关卡选择容器；开始页直接展示单行游戏名，不再显示部署宣传眉标。
 - `src/ui/hud.ts` 负责更新分数、最高分、关卡、模式、计时、机会、道具状态，以及覆盖层显隐、焦点和可访问性属性。
-- `src/game.ts` 通过 `Game.setPhase()` 统一维护游戏阶段，并集中映射 HUD 屏幕，避免开始、暂停、过渡和结算流程分散调用 `showScreen()`。
+- `src/game.ts` 通过 `Game.setPhase()` 统一维护游戏阶段，并集中映射 HUD 屏幕，避免开始、暂停、过渡和结算流程分散调用 `showScreen()`。关卡完成时先标记 `pendingLevelComplete`，等待粒子动画和震屏效果全部结束后再触发过渡弹窗，确保玩家能看到完整的视觉反馈。
 - `HudController.renderLevelSelect()` 根据关卡摘要动态生成按钮式关卡卡片。
 - `HudController.showLevelTransition()` 和 `HudController.showResult()` 只渲染内容，实际切屏由 `Game.setPhase()` 统一触发，确保 phase、覆盖层和焦点状态一致。
 - PC 端 HUD 布局：分数、关卡、模式、计时、机会和暂停按钮以底部横向面板形式居中显示（`bottom: 16px`, `left: 50%`, `max-width: 960px`），道具栏独立放在分数菜单上方（`bottom: 82px`），形成底部双层布局，避免两个菜单重叠；两层均参考移动端胶囊风格；HUD 数字值统一使用单行省略策略避免大分数溢出；砖块布局使用全画布宽度，通过 `desktopBottomDockHeight: 144` 和 `desktopControlDockHeight: 144` 预留底部空间，确保挡板和弹球不会进入 HUD 区域。

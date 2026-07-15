@@ -139,6 +139,7 @@ export class Game {
   private destroyedBrickCount = 0
   private shieldCharges = 0
   private shake = 0
+  private pendingLevelComplete = false
   private activePointerId: number | null = null
   private pointerStartClientX = 0
   private pointerStartTargetX = 0
@@ -243,6 +244,7 @@ export class Game {
     this.particles.update(deltaSeconds)
     this.shake = Math.max(0, this.shake - deltaSeconds * 28)
     this.checkLevelComplete()
+    this.tryCompleteLevel()
     this.updateHud()
   }
 
@@ -899,12 +901,36 @@ export class Game {
   }
 
   private checkLevelComplete(): void {
+    if (this.pendingLevelComplete) {
+      return
+    }
+
     const hasDestructibleBricks = this.bricks.some((brick) => brick.alive && isDestructibleBrick(brick))
 
     if (hasDestructibleBricks) {
       return
     }
 
+    this.pendingLevelComplete = true
+  }
+
+  private tryCompleteLevel(): void {
+    if (!this.pendingLevelComplete) {
+      return
+    }
+
+    const hasActiveParticles = this.particles.hasActiveParticles()
+    const hasActiveShake = this.shake > 0
+
+    if (hasActiveParticles || hasActiveShake) {
+      return
+    }
+
+    this.pendingLevelComplete = false
+    this.completeLevel()
+  }
+
+  private completeLevel(): void {
     const lifeBonus = this.lives * 1000
     const timeBonus = this.levelTimeRemainingSeconds === null ? 0 : Math.ceil(this.levelTimeRemainingSeconds) * 20
     const bonusScore = lifeBonus + timeBonus
