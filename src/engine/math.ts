@@ -190,6 +190,40 @@ export function resolveCircleRectCollision(circle: Circle, rect: Rect): Collisio
   return { normal: { x: 0, y: 1 }, penetration: circle.radius }
 }
 
+export function resolveSweptCircleRectCollision(
+  previousPosition: Vector2,
+  currentPosition: Vector2,
+  radius: number,
+  rect: Rect,
+): CollisionResult | null {
+  const deltaX = currentPosition.x - previousPosition.x
+  const deltaY = currentPosition.y - previousPosition.y
+  const distanceMoved = Math.hypot(deltaX, deltaY)
+
+  if (distanceMoved < 0.001) {
+    return resolveCircleRectCollision({ position: currentPosition, radius }, rect)
+  }
+
+  const steps = Math.ceil(distanceMoved / (radius * 0.5))
+  const stepX = deltaX / steps
+  const stepY = deltaY / steps
+
+  for (let stepIndex = 0; stepIndex <= steps; stepIndex += 1) {
+    const testPosition = {
+      x: previousPosition.x + stepX * stepIndex,
+      y: previousPosition.y + stepY * stepIndex,
+    }
+
+    const collision = resolveCircleRectCollision({ position: testPosition, radius }, rect)
+
+    if (collision) {
+      return collision
+    }
+  }
+
+  return null
+}
+
 export function resolveSweptCircleTopRectCollision(
   previousPosition: Vector2,
   currentPosition: Vector2,

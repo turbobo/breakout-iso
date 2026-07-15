@@ -10,6 +10,7 @@ import {
   getSpeed,
   reflectVelocity,
   resolveCircleRectCollision,
+  resolveSweptCircleRectCollision,
   resolveSweptCircleTopRectCollision,
   scaleToLength,
   stabilizeVelocityAxes,
@@ -607,9 +608,12 @@ export class Game {
   private handleBrickCollisions(): void {
     for (const ball of this.balls) {
       const candidateBricks = this.collectBrickCollisionCandidates(ball)
+      const previousPosition = ball.getPreviousPosition()
 
       for (const brick of candidateBricks) {
-        const collision = resolveCircleRectCollision(ball, brick.rect)
+        const collision = isSteelBrick(brick)
+          ? resolveSweptCircleRectCollision(previousPosition, ball.position, ball.radius, brick.rect)
+          : resolveCircleRectCollision(ball, brick.rect)
 
         if (!collision) {
           continue

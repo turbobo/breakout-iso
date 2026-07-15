@@ -45,6 +45,10 @@ export class Ball {
     return this.fireballTimer > 0
   }
 
+  public getPreviousPosition(): Vector2 {
+    return this.previousPosition
+  }
+
   private recordTrailPosition(): void {
     this.trailHeadIndex = (this.trailHeadIndex - 1 + trailCapacity) % trailCapacity
 
