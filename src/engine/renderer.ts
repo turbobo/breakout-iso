@@ -16,6 +16,7 @@ export interface RenderFrame {
   shieldY: number
   shieldWidth: number
   shake: number
+  reducedMotion?: boolean
 }
 
 export class Renderer {
@@ -31,6 +32,7 @@ export class Renderer {
   public draw(frame: RenderFrame): void {
     const width = this.context.canvas.clientWidth
     const height = this.context.canvas.clientHeight
+    const reducedMotion = frame.reducedMotion ?? false
 
     this.resetGradientCachesIfCanvasSizeChanged(width, height)
     this.context.clearRect(0, 0, width, height)
@@ -38,7 +40,7 @@ export class Renderer {
 
     this.context.save()
 
-    if (frame.shake > 0) {
+    if (frame.shake > 0 && !reducedMotion) {
       this.context.translate(
         (Math.random() - 0.5) * frame.shake,
         (Math.random() - 0.5) * frame.shake,
@@ -49,9 +51,13 @@ export class Renderer {
     this.drawPowerUps(frame.powerUps)
     this.drawPaddle(frame.paddle)
     this.drawShield(width, frame.shieldY, frame.shieldActive, frame.shieldWidth)
-    this.drawBallTrails(frame.balls)
+    if (!reducedMotion) {
+      this.drawBallTrails(frame.balls)
+    }
     this.drawBalls(frame.balls)
-    frame.particles.draw(this.context)
+    if (!reducedMotion) {
+      frame.particles.draw(this.context)
+    }
     this.drawComboGhost(width, frame.score, frame.combo)
     this.context.restore()
   }

@@ -208,7 +208,7 @@ angle = -90° + hitRatio * 约 52°
 ## 10. UI 与 HUD
 
 - `src/main.ts` 定义 HUD、开始页、下一关过渡页、暂停页、结算页和关卡选择容器；开始页直接展示单行游戏名，不再显示部署宣传眉标。开始页添加道具图标列表（仅图标+名称），道具栏显示小字提示（如"15秒"、"穿透"），暂停页添加完整道具说明区域。
-- `src/ui/hud.ts` 负责更新分数、最高分、关卡、模式、计时、机会、道具状态，以及覆盖层显隐、焦点和可访问性属性。
+- `src/ui/hud.ts` 负责更新分数、关卡、模式、计时、机会、道具状态，以及覆盖层显隐、焦点和可访问性属性。最高分仅在结算页展示，不在 HUD 常驻显示，减少信息过载。
 - `src/game.ts` 通过 `Game.setPhase()` 统一维护游戏阶段，并集中映射 HUD 屏幕，避免开始、暂停、过渡和结算流程分散调用 `showScreen()`。关卡完成时先标记 `pendingLevelComplete`，等待粒子动画和震屏效果全部结束后再触发过渡弹窗，确保玩家能看到完整的视觉反馈。
 - `HudController.renderLevelSelect()` 根据关卡摘要动态生成按钮式关卡卡片。
 - `HudController.showLevelTransition()` 和 `HudController.showResult()` 只渲染内容，实际切屏由 `Game.setPhase()` 统一触发，确保 phase、覆盖层和焦点状态一致。
@@ -219,6 +219,7 @@ angle = -90° + hitRatio * 约 52°
 - 移动端挡板与护盾适配：挡板基础宽度通过 `getResponsiveSegmentWidth()` 按屏宽缩放到约 30%，并限制在 88～112px；短横屏改用更短比例和 76～104px 限制。护盾在移动端和短横屏覆盖整条可玩底线，视觉长度与实际拦截范围统一为全宽，避免边缘区域掉球未被保护；PC 端仍保留左右内边距，减少对主画面的视觉压迫。护盾碰撞检测同时检查 X 轴和 Y 轴位置（Y 轴容差 40px），防止高速球在一帧内穿过护盾区域而不被拦截。
 - 开始、过渡、暂停和结算覆盖层使用 `dialog` 语义、`aria-modal` 和标题关联，隐藏时同步 `aria-hidden` 与 `inert`，避免不可见控件进入 Tab 顺序。
 - 屏幕切换后焦点自动落到当前覆盖层主按钮；回到游戏时焦点返回 Canvas，保证键盘用户能继续用空格、方向键和快捷键操作。
+- Escape 键支持：暂停页按 Escape 恢复游戏，过渡页和结算页按 Escape 返回关卡菜单。
 - 按钮和关卡卡片提供 `:focus-visible` 高对比焦点样式。
 - 暂停页、下一关过渡页和结算页都提供"选择关卡"入口，便于直接切换挑战。
 
@@ -266,6 +267,7 @@ value: number string
 - `Game.dispose()` 会取消动画帧、释放指针捕获、解绑窗口/画布/按钮事件，并关闭音频上下文。
 - 入口在 `pagehide` 和 Vite HMR dispose 时调用 `game.dispose()`，避免页面卸载或热更新后残留事件监听器。
 - 动效优先使用 `transform`、`opacity`、Canvas 绘制。
+- `prefers-reduced-motion` 支持：CSS 层通过媒体查询禁用过渡和动画；Canvas 渲染层通过 `matchMedia` 实时检测，在减弱动效模式下跳过粒子爆发（`ParticleSystem.setReducedMotion`）、球体拖尾绘制和震屏偏移，保留核心游戏逻辑不变。
 
 ## 15. 验证策略
 

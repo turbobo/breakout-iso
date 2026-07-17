@@ -13,8 +13,17 @@ export interface Particle {
 export class ParticleSystem {
   private readonly particles: Particle[] = []
   private readonly maxParticles = 500
+  private reducedMotion = false
+
+  public setReducedMotion(enabled: boolean): void {
+    this.reducedMotion = enabled
+  }
 
   public burst(position: Vector2, color: string, amount: number): void {
+    if (this.reducedMotion) {
+      return
+    }
+
     const remainingCapacity = this.maxParticles - this.particles.length
     if (remainingCapacity <= 0) return
 

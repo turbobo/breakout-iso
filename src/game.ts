@@ -119,6 +119,7 @@ export class Game {
   private readonly particles = new ParticleSystem()
   private readonly audio = new SynthAudio()
   private readonly hud = new HudController()
+  private readonly reducedMotionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   private readonly pressedKeys = new Set<string>()
   private boardWidth = 960
   private boardHeight = 640
@@ -164,6 +165,7 @@ export class Game {
     this.canvas = canvas
     this.context = context
     this.renderer = new Renderer(context)
+    this.particles.setReducedMotion(this.reducedMotionMediaQuery.matches)
     this.registerEvents()
     this.resize()
     this.resetRun()
@@ -262,6 +264,7 @@ export class Game {
       shieldY: this.getPlayBottomY(),
       shieldWidth: this.getShieldWidth(),
       shake: this.shake,
+      reducedMotion: this.reducedMotionMediaQuery.matches,
     })
   }
 
@@ -274,6 +277,9 @@ export class Game {
     const handlePointerDown = (event: PointerEvent): void => this.handlePointerDown(event)
     const handlePointerMove = (event: PointerEvent): void => this.handlePointerMove(event)
     const handlePointerEnd = (event: PointerEvent): void => this.handlePointerEnd(event)
+    const handleReducedMotionChange = (event: MediaQueryListEvent): void => {
+      this.particles.setReducedMotion(event.matches)
+    }
 
     window.addEventListener('resize', handleResize)
     window.visualViewport?.addEventListener('resize', handleResize)
@@ -283,6 +289,7 @@ export class Game {
     this.canvas.addEventListener('pointermove', handlePointerMove)
     this.canvas.addEventListener('pointerup', handlePointerEnd)
     this.canvas.addEventListener('pointercancel', handlePointerEnd)
+    this.reducedMotionMediaQuery.addEventListener('change', handleReducedMotionChange)
 
     this.eventCleanups.push(
       () => window.removeEventListener('resize', handleResize),
@@ -293,6 +300,7 @@ export class Game {
       () => this.canvas.removeEventListener('pointermove', handlePointerMove),
       () => this.canvas.removeEventListener('pointerup', handlePointerEnd),
       () => this.canvas.removeEventListener('pointercancel', handlePointerEnd),
+      () => this.reducedMotionMediaQuery.removeEventListener('change', handleReducedMotionChange),
     )
 
     this.registerActionHandlers('[data-action="start"], [data-action="resume"]', () => this.startOrResume())
@@ -352,6 +360,16 @@ export class Game {
 
   private handleKeyDown(event: KeyboardEvent): void {
     this.pressedKeys.add(event.key)
+
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      if (this.phase === 'paused') {
+        this.startOrResume()
+      } else if (this.phase === 'transition' || this.phase === 'result') {
+        this.returnToMenu()
+      }
+      return
+    }
 
     if (event.code === 'Space') {
       event.preventDefault()
@@ -1256,7 +1274,6 @@ export class Game {
 
     this.hud.update({
       score: this.score,
-      bestScore: this.bestScore,
       levelLabel: `${displayLevelIndex + 1}/${getLevelCount()}`,
       lives: this.lives,
       mode: this.getLevelModeLabel(displayLevelIndex),

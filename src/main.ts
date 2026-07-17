@@ -17,10 +17,6 @@ app.innerHTML = `
         <strong data-hud="score">0</strong>
       </div>
       <div class="hud-item">
-        <span>最高分</span>
-        <strong data-hud="best">0</strong>
-      </div>
-      <div class="hud-item">
         <span>关卡</span>
         <strong data-hud="level">1</strong>
       </div>

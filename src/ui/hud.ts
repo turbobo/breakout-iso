@@ -1,6 +1,5 @@
 export interface HudState {
   score: number
-  bestScore: number
   levelLabel: string
   lives: number
   mode: string
@@ -39,7 +38,6 @@ export interface ResultState {
 
 export class HudController {
   private readonly scoreElement = this.requireElement('[data-hud="score"]')
-  private readonly bestElement = this.requireElement('[data-hud="best"]')
   private readonly levelElement = this.requireElement('[data-hud="level"]')
   private readonly modeElement = this.requireElement('[data-hud="mode"]')
   private readonly timerElement = this.requireElement('[data-hud="timer"]')
@@ -62,7 +60,6 @@ export class HudController {
 
   public update(state: HudState): void {
     this.scoreElement.textContent = String(state.score)
-    this.bestElement.textContent = String(state.bestScore)
     this.levelElement.textContent = state.levelLabel
     this.modeElement.textContent = state.mode
     this.timerElement.textContent = state.timerText
